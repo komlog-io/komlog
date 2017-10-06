@@ -213,12 +213,34 @@ def get_datasource_maps(did, fromdate=None, todate=None, count=None):
     return data
 
 @exceptions.ExceptionHandler
-def get_datasource_map_dates(did, fromdate, todate):
-    row=connection.session.execute(stmtdatasource.S_DATE_DATDATASOURCEMAP_B_DID_INITDATE_ENDDATE,(did,fromdate,todate))
+def get_datasource_map_dates(did, fromdate=None, todate=None, count=None):
     data=[]
+    if fromdate:
+        if todate:
+            if count:
+                row=connection.session.execute(stmtdatasource.S_DATE_DATDATASOURCEMAP_B_DID_INITDATE_ENDDATE_COUNT,(did,fromdate, todate, count))
+            else:
+                row=connection.session.execute(stmtdatasource.S_DATE_DATDATASOURCEMAP_B_DID_INITDATE_ENDDATE,(did, fromdate, todate))
+        else:
+            if count:
+                row=connection.session.execute(stmtdatasource.S_DATE_DATDATASOURCEMAP_B_DID_INITDATE_COUNT,(did, fromdate, count))
+            else:
+                row=connection.session.execute(stmtdatasource.S_DATE_DATDATASOURCEMAP_B_DID_INITDATE,(did, fromdate))
+    else:
+        if todate:
+            if count:
+                row=connection.session.execute(stmtdatasource.S_DATE_DATDATASOURCEMAP_B_DID_ENDDATE_COUNT,(did, todate, count))
+            else:
+                row=connection.session.execute(stmtdatasource.S_DATE_DATDATASOURCEMAP_B_DID_ENDDATE,(did, todate))
+        else:
+            if count:
+                row=connection.session.execute(stmtdatasource.S_DATE_DATDATASOURCEMAP_B_DID_COUNT,(did, count))
+            else:
+                row=connection.session.execute(stmtdatasource.S_DATE_DATDATASOURCEMAP_B_DID,(did, ))
     if row:
         data=[r['date'] for r in row]
     return data
+
 
 @exceptions.ExceptionHandler
 def get_datasource_map_variables(did, date):
@@ -284,15 +306,33 @@ def get_datasource_hash(did, date):
         return ormdatasource.DatasourceHash(**row[0])
 
 @exceptions.ExceptionHandler
-def get_datasource_hashes(did, fromdate, todate, count=None):
-    if not count:
-        row=connection.session.execute(stmtdatasource.S_A_DATDATASOURCEHASH_B_DID_INITDATE_ENDDATE,(did,fromdate,todate))
-    else:
-        row=connection.session.execute(stmtdatasource.S_A_DATDATASOURCEHASH_B_DID_INITDATE_ENDDATE_COUNT,(did,fromdate,todate,count))
+def get_datasource_hashes(did, fromdate=None, todate=None, count=None):
     data=[]
+    if fromdate:
+        if todate:
+            if count:
+                row=connection.session.execute(stmtdatasource.S_A_DATDATASOURCEHASH_B_DID_INITDATE_ENDDATE_COUNT,(did,fromdate, todate, count))
+            else:
+                row=connection.session.execute(stmtdatasource.S_A_DATDATASOURCEHASH_B_DID_INITDATE_ENDDATE,(did, fromdate, todate))
+        else:
+            if count:
+                row=connection.session.execute(stmtdatasource.S_A_DATDATASOURCEHASH_B_DID_INITDATE_COUNT,(did, fromdate, count))
+            else:
+                row=connection.session.execute(stmtdatasource.S_A_DATDATASOURCEHASH_B_DID_INITDATE,(did, fromdate))
+    else:
+        if todate:
+            if count:
+                row=connection.session.execute(stmtdatasource.S_A_DATDATASOURCEHASH_B_DID_ENDDATE_COUNT,(did, todate, count))
+            else:
+                row=connection.session.execute(stmtdatasource.S_A_DATDATASOURCEHASH_B_DID_ENDDATE,(did, todate))
+        else:
+            if count:
+                row=connection.session.execute(stmtdatasource.S_A_DATDATASOURCEHASH_B_DID_COUNT,(did, count))
+            else:
+                row=connection.session.execute(stmtdatasource.S_A_DATDATASOURCEHASH_B_DID,(did, ))
     if row:
-        for m in row:
-            data.append(ormdatasource.DatasourceHash(**m))
+        for d in row:
+            data.append(ormdatasource.DatasourceHash(**d))
     return data
 
 @exceptions.ExceptionHandler
@@ -419,40 +459,13 @@ def delete_datasource_supplies_at(did, date):
     return True
 
 @exceptions.ExceptionHandler
-def get_datasource_data_features(did, date):
-    row = connection.session.execute(stmtdatasource.S_A_DATDATASOURCEFEATURES_B_DID_DATE,(did, date))
-    return ormdatasource.DatasourceDataFeatures(**row[0]) if row else None
-
-@exceptions.ExceptionHandler
-def get_last_datasource_data_features(did, count=1):
-    data = []
-    row = connection.session.execute(stmtdatasource.S_DATEFEATURES_DATDATASOURCEFEATURES_B_DID_COUNT,(did, count))
-    if row:
-        for d in row:
-            data.append(ormdatasource.DatasourceDataFeatures(did, **d))
-    return data
-
-@exceptions.ExceptionHandler
-def insert_datasource_data_features(did, date, features):
-    connection.session.execute(stmtdatasource.I_A_DATDATASOURCEFEATURES,(did, date, features))
-    return True
-
-@exceptions.ExceptionHandler
-def delete_datasource_data_features(did, date=None):
-    if date == None:
-        connection.session.execute(stmtdatasource.D_A_DATDATASOURCEFEATURES_B_DID,(did,))
-    else:
-        connection.session.execute(stmtdatasource.D_A_DATDATASOURCEFEATURES_B_DID_DATE,(did, date))
-    return True
-
-@exceptions.ExceptionHandler
 def get_datasource_features(did):
-    row = connection.session.execute(stmtdatasource.S_FEATURES_MSTDATASOURCEFEATURES_B_DID,(did,))
+    row = connection.session.execute(stmtdatasource.S_DATEFEATURES_MSTDATASOURCEFEATURES_B_DID,(did,))
     return ormdatasource.DatasourceFeatures(did, **row[0]) if row else None
 
 @exceptions.ExceptionHandler
-def insert_datasource_features(did, features):
-    connection.session.execute(stmtdatasource.I_A_MSTDATASOURCEFEATURES,(did, features))
+def insert_datasource_features(did, date, features):
+    connection.session.execute(stmtdatasource.I_A_MSTDATASOURCEFEATURES,(did, date, features))
     return True
 
 @exceptions.ExceptionHandler
@@ -461,50 +474,25 @@ def delete_datasource_features(did):
     return True
 
 @exceptions.ExceptionHandler
-def get_datasource_supply_features(did, supply):
-    row = connection.session.execute(stmtdatasource.S_FEATURES_MSTDATASOURCESUPPLYFEATURES_B_DID_SUPPLY,(did,supply))
-    return ormdatasource.DatasourceSupplyFeatures(did, supply, **row[0]) if row else None
-
-@exceptions.ExceptionHandler
-def insert_datasource_supply_features(did, supply, features):
-    connection.session.execute(stmtdatasource.I_A_MSTDATASOURCESUPPLYFEATURES,(did, supply, features))
-    return True
-
-@exceptions.ExceptionHandler
-def delete_datasource_supply_features(did, supply=None):
-    if supply == None:
-        connection.session.execute(stmtdatasource.D_A_MSTDATASOURCESUPPLYFEATURES_B_DID,(did,))
-    else:
-        connection.session.execute(stmtdatasource.D_A_MSTDATASOURCESUPPLYFEATURES_B_DID_SUPPLY,(did, supply))
-    return True
-
-@exceptions.ExceptionHandler
-def get_datasource_supplies_guessed(did):
-    row = connection.session.execute(stmtdatasource.S_SUPPLIES_MSTDATASOURCESUPPLIESGUESSED_B_DID,(did,))
-    return ormdatasource.DatasourceSuppliesGuessed(did, **row[0]) if row else None
-
-@exceptions.ExceptionHandler
-def insert_datasource_supplies_guessed(did, supplies):
-    connection.session.execute(stmtdatasource.I_A_MSTDATASOURCESUPPLIESGUESSED,(did, supplies))
-    return True
-
-@exceptions.ExceptionHandler
-def delete_datasource_supplies_guessed(did):
-    connection.session.execute(stmtdatasource.D_A_MSTDATASOURCESUPPLIESGUESSED_B_DID,(did,))
-    return True
-
-@exceptions.ExceptionHandler
 def get_datasources_by_feature(feature, count=1):
-    dids = []
-    row = connection.session.execute(stmtdatasource.S_DID_MSTDATASOURCEBYFEATURE_B_FEATURE_COUNT,(feature,count))
+    data = []
+    row = connection.session.execute(stmtdatasource.S_DIDWEIGHT_MSTDATASOURCEBYFEATURE_B_FEATURE_COUNT,(feature,count))
     if row:
         for r in row:
-            dids.append(r['did'])
-    return dids
+            data.append(ormdatasource.DatasourceByFeature(feature, **r))
+    return data
 
 @exceptions.ExceptionHandler
-def insert_datasource_by_feature(feature, did):
-    connection.session.execute(stmtdatasource.I_A_MSTDATASOURCEBYFEATURE,(feature, did))
+def insert_datasource_by_feature(feature, did, weight):
+    connection.session.execute(stmtdatasource.I_A_MSTDATASOURCEBYFEATURE,(feature, did, weight))
+    return True
+
+@exceptions.ExceptionHandler
+def insert_datasource_by_features(did, info):
+    stmts = []
+    for item in info:
+        stmts.append((stmtdatasource.I_A_MSTDATASOURCEBYFEATURE,(item['feature'], did, item['weight'])))
+    connection.session.execute_batch(stmts)
     return True
 
 @exceptions.ExceptionHandler
@@ -513,22 +501,11 @@ def delete_datasource_by_feature(feature, did):
     return True
 
 @exceptions.ExceptionHandler
-def get_datasources_by_supply_feature(feature, supply, count=1):
-    dids = []
-    row = connection.session.execute(stmtdatasource.S_DID_MSTDATASOURCEBYSUPPLYFEATURE_B_FEATURE_SUPPLY_COUNT,(feature, supply, count))
-    if row:
-        for r in row:
-            dids.append(r['did'])
-    return dids
-
-@exceptions.ExceptionHandler
-def insert_datasource_by_supply_feature(feature, supply, did):
-    connection.session.execute(stmtdatasource.I_A_MSTDATASOURCEBYSUPPLYFEATURE,(feature, supply, did))
-    return True
-
-@exceptions.ExceptionHandler
-def delete_datasource_by_supply_feature(feature, supply, did):
-    connection.session.execute(stmtdatasource.D_A_MSTDATASOURCEBYSUPPLYFEATURE_B_FEATURE_SUPPLY_DID,(feature,supply,did))
+def delete_datasource_by_features(did, features):
+    stmts = []
+    for feature in features:
+        stmts.append((stmtdatasource.D_A_MSTDATASOURCEBYFEATURE_B_FEATURE_DID,(feature,did)))
+    connection.session.execute_batch(stmts)
     return True
 
 @exceptions.ExceptionHandler

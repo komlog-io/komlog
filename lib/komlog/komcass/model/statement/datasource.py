@@ -29,7 +29,6 @@ STATEMENTS={
     20208:'select did,date,content from dat_datasource where did=?',
     20300:'select variables from dat_datasource_map where did=? and date=?',
     20301:'select datapoints from dat_datasource_map where did=? and date=?',
-    20302:'select date from dat_datasource_map where did=? and date>=? and date<=?',
     20303:'select did,date,variables,datapoints from dat_datasource_map where did=? and date=?',
     20304:'select did,date,variables,datapoints from dat_datasource_map where did=? and date>=? and date<=? limit ?',
     20305:'select did,date,variables,datapoints from dat_datasource_map where did=? and date>=? and date<=?',
@@ -39,11 +38,26 @@ STATEMENTS={
     20309:'select did,date,variables,datapoints from dat_datasource_map where did=? and date<=?',
     20310:'select did,date,variables,datapoints from dat_datasource_map where did=? limit ?',
     20311:'select did,date,variables,datapoints from dat_datasource_map where did=?',
+    20312:'select date from dat_datasource_map where did=? and date=?',
+    20313:'select date from dat_datasource_map where did=? and date>=? and date<=? limit ?',
+    20314:'select date from dat_datasource_map where did=? and date>=? and date<=?',
+    20315:'select date from dat_datasource_map where did=? and date>=? limit ?',
+    20316:'select date from dat_datasource_map where did=? and date>=?',
+    20317:'select date from dat_datasource_map where did=? and date<=? limit ?',
+    20318:'select date from dat_datasource_map where did=? and date<=?',
+    20319:'select date from dat_datasource_map where did=? limit ?',
+    20320:'select date from dat_datasource_map where did=?',
     20400:'select did,date,content_length,num_lines,num_words,word_frecuency from dat_datasource_text_summary where did=? and date=?',
     20401:'select did,date,content_length,num_lines,num_words,word_frecuency from dat_datasource_text_summary where did=? and date>=? and date<=?',
     20600:'select did,date,content from dat_datasource_hash where did=? and date=?',
-    20601:'select did,date,content from dat_datasource_hash where did=? and date>=? and date<=?',
-    20602:'select did,date,content from dat_datasource_hash where did=? and date>=? and date<=? limit ?',
+    20601:'select did,date,content from dat_datasource_hash where did=? and date>=? and date<=? limit ?',
+    20602:'select did,date,content from dat_datasource_hash where did=? and date>=? and date<=?',
+    20603:'select did,date,content from dat_datasource_hash where did=? and date>=? limit ?',
+    20604:'select did,date,content from dat_datasource_hash where did=? and date>=?',
+    20605:'select did,date,content from dat_datasource_hash where did=? and date<=? limit ?',
+    20606:'select did,date,content from dat_datasource_hash where did=? and date<=?',
+    20607:'select did,date,content from dat_datasource_hash where did=? limit ?',
+    20608:'select did,date,content from dat_datasource_hash where did=?',
     20700:'select did,date,size from dat_datasource_metadata where did=? and date=?',
     20701:'select size from dat_datasource_metadata where did=? and date=?',
     20702:'select did,date,size from dat_datasource_metadata where did=? and date>=? and date<=?',
@@ -52,14 +66,9 @@ STATEMENTS={
     20900:'select did,date,supplies from dat_datasource_supplies where did=? and date=?',
     20901:'select did,date,supplies from dat_datasource_supplies where did=? and date>=? and date<=?',
     20902:'select did,date,supplies from dat_datasource_supplies where did=? limit ?',
-    21000:'select did,date,features from dat_datasource_features where did=? and date=?',
-    21001:'select date,features from dat_datasource_features where did=? limit ?',
-    21100:'select features from mst_datasource_features where did=?',
-    21150:'select features from mst_datasource_supply_features where did=? and supply=?',
-    21200:'select supplies from mst_datasource_supplies_guessed where did=?',
-    21300:'select did from mst_datasource_by_feature where feature=? limit ?',
-    21400:'select did from mst_datasource_by_supply_feature where feature=? and supply=? limit ?',
-    21500:'select dtree from mst_datapoint_classifier_dtree where did=?',
+    21000:'select date,features from mst_datasource_features where did=?',
+    21100:'select did,weight from mst_datasource_by_feature where feature=? limit ?',
+    21200:'select dtree from mst_datapoint_classifier_dtree where did=?',
     25000:'insert into mst_datasource (did,aid,uid,datasourcename,creation_date) values (?,?,?,?,?)',
     25001:'insert into mst_datasource (did,aid,uid,datasourcename,creation_date) values (?,?,?,?,?) if not exists',
     25100:'insert into mst_datasource_stats (did,last_received) values (?,?)',
@@ -71,13 +80,9 @@ STATEMENTS={
     25700:'insert into dat_datasource_metadata (did,date,size) values (?,?,?)',
     25800:'insert into mst_datasource_hooks (did,sid) values (?,?)',
     25900:'insert into dat_datasource_supplies (did,date,supplies) values (?,?,?)',
-    26000:'insert into dat_datasource_features (did,date,features) values (?,?,?)',
-    26100:'insert into mst_datasource_features (did,features) values (?,?)',
-    26150:'insert into mst_datasource_supply_features (did,supply,features) values (?,?,?)',
-    26200:'insert into mst_datasource_supplies_guessed (did,supplies) values (?,?)',
-    26300:'insert into mst_datasource_by_feature (feature, did) values (?,?)',
-    26400:'insert into mst_datasource_by_supply_feature (feature, supply, did) values (?,?,?)',
-    26500:'insert into mst_datapoint_classifier_dtree (did,dtree) values (?,?)',
+    26000:'insert into mst_datasource_features (did,date,features) values (?,?,?)',
+    26100:'insert into mst_datasource_by_feature (feature, did, weight) values (?,?,?)',
+    26200:'insert into mst_datapoint_classifier_dtree (did,dtree) values (?,?)',
     27000:'delete from mst_datasource where did=?',
     27100:'delete from mst_datasource_stats where did=?',
     27200:'delete from dat_datasource where did=?',
@@ -95,15 +100,9 @@ STATEMENTS={
     27801:'delete from mst_datasource_hooks where did=? and sid=?',
     27900:'delete from dat_datasource_supplies where did=?',
     27901:'delete from dat_datasource_supplies where did=? and date=?',
-    28000:'delete from dat_datasource_features where did=?',
-    28001:'delete from dat_datasource_features where did=? and date=?',
-    28100:'delete from mst_datasource_features where did=?',
-    28150:'delete from mst_datasource_supply_features where did=?',
-    28151:'delete from mst_datasource_supply_features where did=? and supply=?',
-    28200:'delete from mst_datasource_supplies_guessed where did=?',
-    28300:'delete from mst_datasource_by_feature where feature=? and did=?',
-    28400:'delete from mst_datasource_by_supply_feature where feature=? and supply=? and did=?',
-    28500:'delete from mst_datapoint_classifier_dtree where did=?',
+    28000:'delete from mst_datasource_features where did=?',
+    28100:'delete from mst_datasource_by_feature where feature=? and did=?',
+    28200:'delete from mst_datapoint_classifier_dtree where did=?',
     29300:'update dat_datasource_map set variables[?]=? where did=? and date=?',
     29301:'update dat_datasource_map set datapoints[?]=? where did=? and date=?'
 }
@@ -137,18 +136,26 @@ S_A_DATDATASOURCE_B_DID=20208
 
 # dat_datasource_map
 
-S_VARIABLES_DATDATASOURCEMAP_B_DID_DATE=20300
-S_DATAPOINTS_DATDATASOURCEMAP_B_DID_DATE=20301
-S_DATE_DATDATASOURCEMAP_B_DID_INITDATE_ENDDATE=20302
-S_A_DATDATASOURCEMAP_B_DID_DATE=20303
-S_A_DATDATASOURCEMAP_B_DID_INITDATE_ENDDATE_COUNT=20304
-S_A_DATDATASOURCEMAP_B_DID_INITDATE_ENDDATE=20305
-S_A_DATDATASOURCEMAP_B_DID_INITDATE_COUNT=20306
-S_A_DATDATASOURCEMAP_B_DID_INITDATE=20307
-S_A_DATDATASOURCEMAP_B_DID_ENDDATE_COUNT=20308
-S_A_DATDATASOURCEMAP_B_DID_ENDDATE=20309
-S_A_DATDATASOURCEMAP_B_DID_COUNT=20310
-S_A_DATDATASOURCEMAP_B_DID=20311
+S_VARIABLES_DATDATASOURCEMAP_B_DID_DATE                 = 20300
+S_DATAPOINTS_DATDATASOURCEMAP_B_DID_DATE                = 20301
+S_A_DATDATASOURCEMAP_B_DID_DATE                         = 20303
+S_A_DATDATASOURCEMAP_B_DID_INITDATE_ENDDATE_COUNT       = 20304
+S_A_DATDATASOURCEMAP_B_DID_INITDATE_ENDDATE             = 20305
+S_A_DATDATASOURCEMAP_B_DID_INITDATE_COUNT               = 20306
+S_A_DATDATASOURCEMAP_B_DID_INITDATE                     = 20307
+S_A_DATDATASOURCEMAP_B_DID_ENDDATE_COUNT                = 20308
+S_A_DATDATASOURCEMAP_B_DID_ENDDATE                      = 20309
+S_A_DATDATASOURCEMAP_B_DID_COUNT                        = 20310
+S_A_DATDATASOURCEMAP_B_DID                              = 20311
+S_DATE_DATDATASOURCEMAP_B_DID_DATE                      = 20312
+S_DATE_DATDATASOURCEMAP_B_DID_INITDATE_ENDDATE_COUNT    = 20313
+S_DATE_DATDATASOURCEMAP_B_DID_INITDATE_ENDDATE          = 20314
+S_DATE_DATDATASOURCEMAP_B_DID_INITDATE_COUNT            = 20315
+S_DATE_DATDATASOURCEMAP_B_DID_INITDATE                  = 20316
+S_DATE_DATDATASOURCEMAP_B_DID_ENDDATE_COUNT             = 20317
+S_DATE_DATDATASOURCEMAP_B_DID_ENDDATE                   = 20318
+S_DATE_DATDATASOURCEMAP_B_DID_COUNT                     = 20319
+S_DATE_DATDATASOURCEMAP_B_DID                           = 20320
 
 # dat_datasource_text_summary
 
@@ -157,9 +164,15 @@ S_A_DATDATASOURCETEXTSUMMARY_B_DID_INITDATE_ENDDATE=20401
 
 # dat_datasource_hash
 
-S_A_DATDATASOURCEHASH_B_DID_DATE=20600
-S_A_DATDATASOURCEHASH_B_DID_INITDATE_ENDDATE=20601
-S_A_DATDATASOURCEHASH_B_DID_INITDATE_ENDDATE_COUNT=20602
+S_A_DATDATASOURCEHASH_B_DID_DATE                    = 20600
+S_A_DATDATASOURCEHASH_B_DID_INITDATE_ENDDATE_COUNT  = 20601
+S_A_DATDATASOURCEHASH_B_DID_INITDATE_ENDDATE        = 20602
+S_A_DATDATASOURCEHASH_B_DID_INITDATE_COUNT          = 20603
+S_A_DATDATASOURCEHASH_B_DID_INITDATE                = 20604
+S_A_DATDATASOURCEHASH_B_DID_ENDDATE_COUNT           = 20605
+S_A_DATDATASOURCEHASH_B_DID_ENDDATE                 = 20606
+S_A_DATDATASOURCEHASH_B_DID_COUNT                   = 20607
+S_A_DATDATASOURCEHASH_B_DID                         = 20608
 
 # dat_datasource_metadata
 
@@ -178,33 +191,17 @@ S_A_DATDATASOURCESUPPLIES_B_DID_DATE                =   20900
 S_A_DATDATASOURCESUPPLIES_B_DID_INITDATE_ENDDATE    =   20901
 S_A_DATDATASOURCESUPPLIES_B_DID_COUNT               =   20902
 
-# dat_datasource_features
-
-S_A_DATDATASOURCEFEATURES_B_DID_DATE                =   21000
-S_DATEFEATURES_DATDATASOURCEFEATURES_B_DID_COUNT    =   21001
-
 # mst_datasource_features
 
-S_FEATURES_MSTDATASOURCEFEATURES_B_DID              =   21100
-
-# mst_datasource_supply_features
-
-S_FEATURES_MSTDATASOURCESUPPLYFEATURES_B_DID_SUPPLY =   21150
-# mst_datasource_supplies_guessed
-
-S_SUPPLIES_MSTDATASOURCESUPPLIESGUESSED_B_DID       =   21200
+S_DATEFEATURES_MSTDATASOURCEFEATURES_B_DID          =   21000
 
 # mst_datasource_by_feature
 
-S_DID_MSTDATASOURCEBYFEATURE_B_FEATURE_COUNT        =   21300
-
-# mst_datasource_by_supply_feature
-
-S_DID_MSTDATASOURCEBYSUPPLYFEATURE_B_FEATURE_SUPPLY_COUNT   =   21400
+S_DIDWEIGHT_MSTDATASOURCEBYFEATURE_B_FEATURE_COUNT  =   21100
 
 # mst_datapoint_classifier_dtree
 
-S_DTREE_MSTDATAPOINTCLASSIFIERDTREE_B_DID           =   21500
+S_DTREE_MSTDATAPOINTCLASSIFIERDTREE_B_DID           =   21200
 
 # Inserts (25000 - 26999)
 
@@ -246,33 +243,17 @@ I_A_MSTDATASOURCEHOOKS  =   25800
 
 I_A_DATDATASOURCESUPPLIES   =   25900
 
-# dat_datasource_features
-
-I_A_DATDATASOURCEFEATURES   =   26000
-
 # mst_datasource_features
 
-I_A_MSTDATASOURCEFEATURES   =   26100
-
-# mst_datasource_supply_features
-
-I_A_MSTDATASOURCESUPPLYFEATURES   =   26150
-
-# mst_datasource_supplies_guessed
-
-I_A_MSTDATASOURCESUPPLIESGUESSED    = 26200
+I_A_MSTDATASOURCEFEATURES   =   26000
 
 # mst_datasource_by_feature
 
-I_A_MSTDATASOURCEBYFEATURE  =   26300
-
-# mst_datasource_by_supply_feature
-
-I_A_MSTDATASOURCEBYSUPPLYFEATURE    = 26400
+I_A_MSTDATASOURCEBYFEATURE  =   26100
 
 # mst_datapoint_classifier_dtree
 
-I_A_MSTDATAPOINTCLASSIFIERDTREE                 =   26500
+I_A_MSTDATAPOINTCLASSIFIERDTREE =   26200
 
 # Deletes (27000 - 28999)
 
@@ -320,35 +301,17 @@ D_A_MSTDATASOURCEHOOKS_B_DID_SID    =   27801
 D_A_DATDATASOURCESUPPLIES_B_DID     =   27900
 D_A_DATDATASOURCESUPPLIES_B_DID_DATE=   27901
 
-# dat_datasource_features
-
-D_A_DATDATASOURCEFEATURES_B_DID     =   28000
-D_A_DATDATASOURCEFEATURES_B_DID_DATE=   28001
-
 # mst_datasource_features
 
-D_A_MSTDATASOURCEFEATURES_B_DID     =   28100
-
-# mst_datasource_supply_features
-
-D_A_MSTDATASOURCESUPPLYFEATURES_B_DID       = 28150
-D_A_MSTDATASOURCESUPPLYFEATURES_B_DID_SUPPLY= 28151
-
-# mst_datasource_supplies_guessed
-
-D_A_MSTDATASOURCESUPPLIESGUESSED_B_DID      = 28200
+D_A_MSTDATASOURCEFEATURES_B_DID     =   28000
 
 # mst_datasource_by_feature
 
-D_A_MSTDATASOURCEBYFEATURE_B_FEATURE_DID    = 28300
-
-# mst_datasource_by_supply_feature
-
-D_A_MSTDATASOURCEBYSUPPLYFEATURE_B_FEATURE_SUPPLY_DID   = 28400
+D_A_MSTDATASOURCEBYFEATURE_B_FEATURE_DID    = 28100
 
 # mst_datapoint_classifier_dtree
 
-D_A_MSTDATAPOINTCLASSIFIERDTREE_B_DID           =   28500
+D_A_MSTDATAPOINTCLASSIFIERDTREE_B_DID   =   28200
 
 # Updates (29000 - 29999)
 
@@ -373,17 +336,9 @@ U_DATAPOINTS_DATDATASOURCEMAP_B_DID_DATE=29301
 
 # dat_datasource_supplies
 
-# dat_datasource_features
-
 # mst_datasource_features
 
-# mst_datasource_supply_features
-
-# mst_datasource_supplies_guessed
-
 # mst_datasource_by_feature
-
-# mst_datasource_by_supply_feature
 
 # mst_datapoint_classifier_dtree
 

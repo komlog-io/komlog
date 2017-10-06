@@ -110,7 +110,7 @@ class InterfaceImcApiTextminingTest(unittest.TestCase):
         uris=[item['uri'] for item in msgs[0].uris]
         self.assertEqual(sorted(uris),sorted(['datasource_uri.datapoint_uri']))
 
-    def test_process_message_FILLDS_success_none_datapoint_found(self):
+    def test_process_message_FILLDS_success_no_dtree_found(self):
         ''' process_message_FILLDS should succeed although it does not contain any dp '''
         username='test_process_message_fillds_success_none_datapoint_found'
         password='password'
@@ -137,7 +137,9 @@ class InterfaceImcApiTextminingTest(unittest.TestCase):
         self.assertEqual(response.message_type, messages.Messages.FILL_DATASOURCE_MESSAGE)
         self.assertEqual(response.message_params, message.to_serialization())
         self.assertEqual(response.imc_messages['routed'], {})
-        self.assertEqual(response.imc_messages['unrouted'], [])
+        self.assertEqual(len(response.imc_messages['unrouted']), 1)
+        self.assertEqual(response.imc_messages['unrouted'][0].type, messages.Messages.ASSOCIATE_EXISTING_DTREE_MESSAGE)
+        self.assertEqual(response.imc_messages['unrouted'][0].did, did)
 
     def test_process_message_GENTEXTSUMMARY_failure_non_existent_pid(self):
         ''' process_message_GENTEXTSUMMARY should fail if did does not exist '''
@@ -149,13 +151,34 @@ class InterfaceImcApiTextminingTest(unittest.TestCase):
         self.assertEqual(response.imc_messages['unrouted'],[])
         self.assertEqual(response.imc_messages['routed'],{})
 
-    def test_process_message_IDNEWDPS_success_dummy_example(self):
-        ''' process_message_IDNEWDPS dummy test. '''
+    def test_process_message_AEDTREE_failure_ds_not_found(self):
+        ''' process_message_AEDTREE dummy test. '''
         did=uuid.uuid4()
-        message=messages.IdentifyNewDatapointsMessage(did=did)
-        response=textmining.process_message_IDNEWDPS(message=message)
+        message=messages.AssociateExistingDTreeMessage(did=did)
+        response=textmining.process_message_AEDTREE(message=message)
+        self.assertEqual(response.status, status.IMC_STATUS_NOT_FOUND)
+        self.assertEqual(response.error, gesterrors.E_GPA_SDTDS_DSNF)
+        self.assertEqual(response.imc_messages['unrouted'],[])
+        self.assertEqual(response.imc_messages['routed'],{})
+
+    def test_process_message_DSFEATUPD_success_nothing_done(self):
+        ''' process_message_DSFEATUPD dummy test. '''
+        did=uuid.uuid4()
+        message=messages.UpdateDatasourceFeaturesMessage(did=did)
+        response=textmining.process_message_DSFEATUPD(message=message)
         self.assertEqual(response.status, status.IMC_STATUS_OK)
         self.assertEqual(response.error, Errors.OK)
+        self.assertEqual(response.imc_messages['unrouted'],[])
+        self.assertEqual(response.imc_messages['routed'],{})
+
+    def test_process_message_MONIDU_failure_ds_not_found(self):
+        ''' process_message_MONIDU dummy test. '''
+        did = uuid.uuid4()
+        date = uuid.uuid1()
+        message=messages.MonitorIdentifiedUrisMessage(did=did, date=date)
+        response=textmining.process_message_MONIDU(message=message)
+        self.assertEqual(response.status, status.IMC_STATUS_NOT_FOUND)
+        self.assertEqual(response.error, gesterrors.E_GPA_MIU_DSNF)
         self.assertEqual(response.imc_messages['unrouted'],[])
         self.assertEqual(response.imc_messages['routed'],{})
 

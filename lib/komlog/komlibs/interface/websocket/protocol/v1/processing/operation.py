@@ -32,39 +32,39 @@ def process_operation(operation):
 
 def _process_operation_new_datasource(operation):
     if authupdate.update_resources(operation=operation.auth_operation, params=operation.params):
-        msgs=[]
-        msgs.append(messages.UpdateQuotesMessage(operation=operation.auth_operation, params=operation.params))
-        msgs.append(messages.NewDSWidgetMessage(uid=operation.uid,did=operation.did))
-        msgs.append(messages.UserEventMessage(uid=operation.uid,event_type=eventstypes.USER_EVENT_NOTIFICATION_NEW_DATASOURCE, parameters={'did':operation.did.hex}))
-        return msgs
+        return [
+            messages.UpdateQuotesMessage(operation=operation.auth_operation, params=operation.params),
+            messages.NewDSWidgetMessage(uid=operation.uid,did=operation.did),
+            messages.UserEventMessage(uid=operation.uid,event_type=eventstypes.USER_EVENT_NOTIFICATION_NEW_DATASOURCE, parameters={'did':operation.did.hex})
+        ]
     else:
         raise exceptions.OperationExecutionException(error=Errors.E_IWSPV1PO_PONDS_EUR)
 
 def _process_operation_new_user_datapoint(operation):
     if authupdate.update_resources(operation=operation.auth_operation, params=operation.params):
-        msgs=[]
-        msgs.append(messages.UpdateQuotesMessage(operation=operation.auth_operation, params=operation.params))
-        msgs.append(messages.NewDPWidgetMessage(uid=operation.uid,pid=operation.pid))
-        return msgs
+        return [
+            messages.UpdateQuotesMessage(operation=operation.auth_operation, params=operation.params),
+            messages.NewDPWidgetMessage(uid=operation.uid,pid=operation.pid)
+        ]
     else:
         raise exceptions.OperationValidationException(error=Errors.E_IWSPV1PO_PONUDP_EUR)
 
 def _process_operation_datasource_data_stored(operation):
-    msgs=[]
-    msgs.append(messages.UpdateQuotesMessage(operation=operation.auth_operation,params=operation.params))
-    msgs.append(messages.GenerateTextSummaryMessage(did=operation.did,date=operation.date))
-    msgs.append(messages.MapVarsMessage(did=operation.did,date=operation.date))
-    return msgs
+    return [
+        messages.UpdateQuotesMessage(operation=operation.auth_operation,params=operation.params),
+        messages.GenerateTextSummaryMessage(did=operation.did,date=operation.date),
+        messages.MapVarsMessage(did=operation.did,date=operation.date)
+    ]
 
 def _process_operation_datasource_info_stored(operation):
-    msgs=[]
-    msgs.append(messages.IdentifyNewDatapointsMessage(did=operation.did))
-    return msgs
+    return [
+        messages.MonitorIdentifiedUrisMessage(did=operation.did)
+    ]
 
 def _process_operation_datapoint_data_stored(operation):
-    msgs=[]
-    msgs.append(messages.UpdateQuotesMessage(operation=operation.auth_operation,params=operation.params))
-    return msgs
+    return [
+        messages.UpdateQuotesMessage(operation=operation.auth_operation,params=operation.params)
+    ]
 
 _operation_funcs = {
     Operations.NEW_DATASOURCE:_process_operation_new_datasource,

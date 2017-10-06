@@ -52,6 +52,9 @@ def process_message_MONVAR(message):
                 msg=messages.UserEventMessage(uid=datapoint['uid'], event_type=eventstypes.USER_EVENT_INTERVENTION_DATAPOINT_IDENTIFICATION, parameters=params)
                 response.add_imc_message(msg)
                 break # only one notif to user
+    else:
+        # dtree changed, update ds features to reflect these changes
+        response.add_imc_message(messages.UpdateDatasourceFeaturesMessage(did=message.did))
     datasource=datasourceapi.get_datasource_config(did=did)
     webop=operation.NewDatasourceDatapointOperation(uid=datasource['uid'],aid=datasource['aid'],did=did,pid=result['pid'])
     authop=webop.get_auth_operation()
@@ -86,6 +89,10 @@ def process_message_NEGVAR(message):
                 msg=messages.UserEventMessage(uid=datapoint['uid'], event_type=eventstypes.USER_EVENT_INTERVENTION_DATAPOINT_IDENTIFICATION, parameters=params)
                 response.add_imc_message(msg)
                 break # only one notif to user
+    elif result['updated']:
+        # dtree changed, update ds features to reflect these changes
+        for did in result['updated']:
+            response.add_imc_message(messages.UpdateDatasourceFeaturesMessage(did=did))
     response.status=status.IMC_STATUS_OK
     return response
 
@@ -110,6 +117,9 @@ def process_message_POSVAR(message):
                 msg=messages.UserEventMessage(uid=datapoint['uid'], event_type=eventstypes.USER_EVENT_INTERVENTION_DATAPOINT_IDENTIFICATION, parameters=params)
                 response.add_imc_message(msg)
                 break # only one notif to user
+    elif result['updated']:
+        for did in result['updated']:
+            response.add_imc_message(messages.UpdateDatasourceFeaturesMessage(did=did))
     response.status=status.IMC_STATUS_OK
     return response
 

@@ -329,35 +329,23 @@ class Errors(Enum):
     E_IIMM_DIRM_IIRT        = 262813    #: DataIntervalRequestMessage. invalid irt
     E_IIMM_DIRM_IJSIRT      = 262814    #: DataIntervalRequestMessage. invalid json irt
 
-    E_IIMM_IDNEWDPS_IDID    = 262950    #: IdentifyNewDatapoints. invalid did
-    E_IIMM_IDNEWDPS_ELFS    = 262951    #: IdentifyNewDatapoints. error loading from string
-    E_IIMM_IDNEWDPS_MINS    = 262952    #: IdentifyNewDatapoints. msg is not string
-    E_IIMM_IDNEWDPS_IST     = 262953    #: IdentifyNewDatapoints. invalid serialization type
-    E_IIMM_IDNEWDPS_IHDID   = 262954    #: IdentifyNewDatapoints. invalid hex did
+    E_IIMM_AEDTREE_IDID     = 262950    #: AssociateExistingDTreeMessage. invalid did
+    E_IIMM_AEDTREE_ELFS     = 262951    #: AssociateExistingDTreeMessage. error loading from string
+    E_IIMM_AEDTREE_MINS     = 262952    #: AssociateExistingDTreeMessage. msg is not string
+    E_IIMM_AEDTREE_IST      = 262953    #: AssociateExistingDTreeMessage. invalid serialization type
+    E_IIMM_AEDTREE_IHDID    = 262954    #: AssociateExistingDTreeMessage. invalid hex did
 
-    E_IIMM_FEATDPUPD_IPID   = 263000    #: UpdateDatapointFeaturesMessage. invalid pid
-    E_IIMM_FEATDPUPD_ELFS   = 263001    #: UpdateDatapointFeaturesMessage. error loading from string
-    E_IIMM_FEATDPUPD_MINS   = 263002    #: UpdateDatapointFeaturesMessage. msg is not string
-    E_IIMM_FEATDPUPD_IST    = 263003    #: UpdateDatapointFeaturesMessage. invalid serialization type
-    E_IIMM_FEATDPUPD_IHPID  = 263004    #: UpdateDatapointFeaturesMessage. invalid hex pid
+    E_IIMM_DSFEATUPD_IDID   = 263050    #: UpdateDatasourceFeaturesMessage. invalid did
+    E_IIMM_DSFEATUPD_ELFS   = 263051    #: UpdateDatasourceFeaturesMessage. error loading from string
+    E_IIMM_DSFEATUPD_MINS   = 263052    #: UpdateDatasourceFeaturesMessage. msg is not string
+    E_IIMM_DSFEATUPD_IST    = 263053    #: UpdateDatasourceFeaturesMessage. invalid serialization type
+    E_IIMM_DSFEATUPD_IHDID  = 263054    #: UpdateDatasourceFeaturesMessage. invalid hex did
 
-    E_IIMM_FEATDSUPD_IDID   = 263050    #: UpdateDatasourceFeaturesMessage. invalid did
-    E_IIMM_FEATDSUPD_ELFS   = 263051    #: UpdateDatasourceFeaturesMessage. error loading from string
-    E_IIMM_FEATDSUPD_MINS   = 263052    #: UpdateDatasourceFeaturesMessage. msg is not string
-    E_IIMM_FEATDSUPD_IST    = 263053    #: UpdateDatasourceFeaturesMessage. invalid serialization type
-    E_IIMM_FEATDSUPD_IHDID  = 263054    #: UpdateDatasourceFeaturesMessage. invalid hex did
-
-    E_IIMM_IDSUPP_IDID      = 263100    #: IdentifySuppliesMessage. invalid did
-    E_IIMM_IDSUPP_ELFS      = 263101    #: IdentifySuppliesMessage. error loading from string
-    E_IIMM_IDSUPP_MINS      = 263102    #: IdentifySuppliesMessage. msg is not string
-    E_IIMM_IDSUPP_IST       = 263103    #: IdentifySuppliesMessage. invalid serialization type
-    E_IIMM_IDSUPP_IHDID     = 263104    #: IdentifySuppliesMessage. invalid hex did
-
-    E_IIMM_SMPCLASS_IDID    = 263150    #: ClassifySampleMessage. invalid did
-    E_IIMM_SMPCLASS_IDT     = 263151    #: ClassifySampleMessage. invalid date
-    E_IIMM_SMPCLASS_ELFS    = 263152    #: ClassifySampleMessage. error loading from string
-    E_IIMM_SMPCLASS_MINS    = 263153    #: ClassifySampleMessage. msg is not string
-    E_IIMM_SMPCLASS_IST     = 263154    #: ClassifySampleMessage. invalid serialization type
-    E_IIMM_SMPCLASS_IHDID   = 263155    #: ClassifySampleMessage. invalid hex did
-    E_IIMM_SMPCLASS_IHDATE  = 263156    #: ClassifySampleMessage. invalid hex date
+    E_IIMM_MONIDU_IDID      = 263100    #: MonitorIdentifiedUrisMessage. invalid did
+    E_IIMM_MONIDU_IDT       = 263101    #: MonitorIdentifiedUrisMessage. invalid date
+    E_IIMM_MONIDU_ELFS      = 263102    #: MonitorIdentifiedUrisMessage. error loading from string
+    E_IIMM_MONIDU_MINS      = 263103    #: MonitorIdentifiedUrisMessage. msg is not string
+    E_IIMM_MONIDU_IST       = 263104    #: MonitorIdentifiedUrisMessage. invalid serialization type
+    E_IIMM_MONIDU_IHDID     = 263105    #: MonitorIdentifiedUrisMessage. invalid hex did
+    E_IIMM_MONIDU_IJSDATE   = 263106    #: MonitorIdentifiedUrisMessage. invalid date
 

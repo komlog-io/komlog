@@ -91,7 +91,7 @@ class InterfaceWebSocketProtocolV1ProcessingOperationTest(unittest.TestCase):
         op=modop.DatasourceInfoStoredOperation(uid=uid, did=did)
         msgs=operation.process_operation(operation=op)
         message_expected={
-            messages.Messages.IDENTIFY_NEW_DATAPOINTS_MESSAGE.value:1,
+            messages.Messages.MONITOR_IDENTIFIED_URIS_MESSAGE.value:1,
         }
         message_retrieved={}
         for msg in msgs:

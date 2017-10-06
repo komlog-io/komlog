@@ -3,6 +3,7 @@ import time
 import uuid
 import json
 import pickle
+import zlib
 from komlog.komlibs.general.time import timeuuid
 from komlog.komcass.api import datasource as datasourceapi
 from komlog.komcass.model.orm import datasource as ormdatasource
@@ -1435,122 +1436,6 @@ class KomcassApiDatasourceTest(unittest.TestCase):
         self.assertTrue(datasourceapi.delete_datapoint_classifier_dtree(did))
         self.assertIsNone(datasourceapi.get_datapoint_classifier_dtree(did))
         self.assertIsNone(datasourceapi.get_datapoint_classifier_dtree(did))
-    def test_get_datasource_data_features_success_no_feature_found(self):
-        ''' get_datasource_data_features should return None if not features exist for that datasource data sample'''
-        did = uuid.uuid4()
-        date = timeuuid.uuid1()
-        self.assertIsNone(datasourceapi.get_datasource_data_features(did,date))
-
-    def test_get_datasource_data_features_success_feature_found(self):
-        ''' get_datasource_data_features should return a DatasourceDataFeatures object '''
-        did = uuid.uuid4()
-        date = timeuuid.uuid1()
-        features = ['feature1','feature2','feature3']
-        self.assertTrue(datasourceapi.insert_datasource_data_features(did, date, features))
-        obj = datasourceapi.get_datasource_data_features(did,date)
-        self.assertEqual(obj.did, did)
-        self.assertEqual(obj.date, date)
-        self.assertEqual(obj.features, sorted(features))
-
-    def test_get_last_datasource_data_features_success_no_feature_found(self):
-        ''' get_datasource_data_features should return and empty list '''
-        did = uuid.uuid4()
-        self.assertEqual(datasourceapi.get_last_datasource_data_features(did,count=100), [])
-
-    def test_get_last_datasource_data_features_success_last_feature(self):
-        ''' get_datasource_data_features should return the feature with higher date '''
-        did = uuid.uuid4()
-        for i in range(1,100):
-            date = timeuuid.uuid1(seconds=i, predictable=True)
-            self.assertTrue(datasourceapi.insert_datasource_data_features(did, date, ['feature'+str(i)]))
-        features = datasourceapi.get_last_datasource_data_features(did)
-        self.assertEqual(len(features),1)
-        self.assertEqual(features[0].did, did)
-        self.assertEqual(features[0].features, ['feature99'])
-        self.assertEqual(features[0].date, timeuuid.uuid1(seconds=99, predictable=True))
-
-    def test_get_last_datasource_data_features_success_features_range(self):
-        ''' get_datasource_data_features should return the feature count set if has enough data, or all data'''
-        did = uuid.uuid4()
-        for i in range(1,100):
-            date = timeuuid.uuid1(seconds=i, predictable=True)
-            self.assertTrue(datasourceapi.insert_datasource_data_features(did, date, ['feature'+str(i)]))
-        features = datasourceapi.get_last_datasource_data_features(did, count=5)
-        self.assertEqual(len(features),5)
-        self.assertEqual(features[0].did, did)
-        self.assertEqual(features[0].features, ['feature99'])
-        self.assertEqual(features[0].date, timeuuid.uuid1(seconds=99, predictable=True))
-        self.assertEqual(features[1].did, did)
-        self.assertEqual(features[1].features, ['feature98'])
-        self.assertEqual(features[1].date, timeuuid.uuid1(seconds=98, predictable=True))
-        self.assertEqual(features[2].did, did)
-        self.assertEqual(features[2].features, ['feature97'])
-        self.assertEqual(features[2].date, timeuuid.uuid1(seconds=97, predictable=True))
-        self.assertEqual(features[3].did, did)
-        self.assertEqual(features[3].features, ['feature96'])
-        self.assertEqual(features[3].date, timeuuid.uuid1(seconds=96, predictable=True))
-        self.assertEqual(features[4].did, did)
-        self.assertEqual(features[4].date, timeuuid.uuid1(seconds=95, predictable=True))
-        self.assertEqual(features[4].features, ['feature95'])
-        features = datasourceapi.get_last_datasource_data_features(did, count=500)
-        self.assertEqual(len(features),99)
-        self.assertEqual(features[0].did, did)
-        self.assertEqual(features[0].features, ['feature99'])
-        self.assertEqual(features[0].date, timeuuid.uuid1(seconds=99, predictable=True))
-        self.assertEqual(features[98].did, did)
-        self.assertEqual(features[98].features, ['feature1'])
-        self.assertEqual(features[98].date, timeuuid.uuid1(seconds=1, predictable=True))
-
-    def test_insert_datasource_data_features_success(self):
-        ''' insert_datasource_data_features should succeed '''
-        did = uuid.uuid4()
-        for i in range(1,100):
-            date = timeuuid.uuid1(seconds=i, predictable=True)
-            self.assertTrue(datasourceapi.insert_datasource_data_features(did, date, ['feature'+str(i)]))
-        features = datasourceapi.get_last_datasource_data_features(did, count=99)
-        self.assertEqual(len(features),99)
-        for i in range(1,100):
-            self.assertEqual(features[i-1].did, did)
-            self.assertEqual(features[i-1].features, ['feature'+str(100-i)])
-            self.assertEqual(features[i-1].date, timeuuid.uuid1(seconds=100-i, predictable=True))
-
-    def test_delete_datasource_data_features_success_all_dates(self):
-        ''' delete_datasource_data_features should delete all rows if no date is passed '''
-        did = uuid.uuid4()
-        for i in range(1,100):
-            date = timeuuid.uuid1(seconds=i, predictable=True)
-            self.assertTrue(datasourceapi.insert_datasource_data_features(did, date, ['feature'+str(i)]))
-        features = datasourceapi.get_last_datasource_data_features(did, count=99)
-        self.assertEqual(len(features),99)
-        self.assertTrue(datasourceapi.delete_datasource_data_features(did))
-        features = datasourceapi.get_last_datasource_data_features(did, count=99)
-        self.assertEqual(len(features),0)
-
-    def test_delete_datasource_data_features_success_specific_date(self):
-        ''' delete_datasource_data_features should remove only specific date if it exist '''
-        did = uuid.uuid4()
-        for i in range(1,100):
-            date = timeuuid.uuid1(seconds=i, predictable=True)
-            self.assertTrue(datasourceapi.insert_datasource_data_features(did, date, ['feature'+str(i)]))
-        features = datasourceapi.get_last_datasource_data_features(did, count=99)
-        self.assertEqual(len(features),99)
-        for i in range(1,100):
-            date = timeuuid.uuid1(seconds=i, predictable=True)
-            self.assertTrue(datasourceapi.delete_datasource_data_features(did, date))
-            features = datasourceapi.get_last_datasource_data_features(did, count=99)
-            self.assertEqual(len(features),99-i)
-
-    def test_delete_datasource_data_features_success_no_data_exist(self):
-        ''' delete_datasource_data_features should remove only specific date if it exist '''
-        did = uuid.uuid4()
-        features = datasourceapi.get_last_datasource_data_features(did, count=99)
-        self.assertEqual(len(features),0)
-        for i in range(1,100):
-            date = timeuuid.uuid1(seconds=i, predictable=True)
-            self.assertTrue(datasourceapi.delete_datasource_data_features(did, date))
-        self.assertTrue(datasourceapi.delete_datasource_data_features(did))
-        features = datasourceapi.get_last_datasource_data_features(did, count=99)
-        self.assertEqual(len(features),0)
 
     def test_get_datasource_features_success_no_feature(self):
         ''' get_datasource_features should return None if no data is found '''
@@ -1560,38 +1445,48 @@ class KomcassApiDatasourceTest(unittest.TestCase):
     def test_get_datasource_features_success_features_found(self):
         ''' get_datasource_features should return a DatasourceFeatures object '''
         did = uuid.uuid4()
-        features = ['a','b','c','d']
-        self.assertTrue(datasourceapi.insert_datasource_features(did, features))
+        date = timeuuid.uuid1()
+        features = [1,2,3,4,5]
+        self.assertTrue(datasourceapi.insert_datasource_features(did, date, features))
         obj = datasourceapi.get_datasource_features(did)
         self.assertEqual(obj.did, did)
+        self.assertEqual(obj.date, date)
         self.assertEqual(obj.features, sorted(features))
 
     def test_insert_datasource_features_success(self):
         ''' insert_datasource_features should insert data and return True '''
         did = uuid.uuid4()
-        features = ['a','b','c','d']
-        self.assertTrue(datasourceapi.insert_datasource_features(did, features))
+        date = timeuuid.uuid1()
+        features = [1,2,3,4,5]
+        self.assertTrue(datasourceapi.insert_datasource_features(did, date, features))
         obj = datasourceapi.get_datasource_features(did)
         self.assertEqual(obj.did, did)
+        self.assertEqual(obj.date, date)
         self.assertEqual(obj.features, sorted(features))
-        features = ['d','x','y','z']
-        self.assertTrue(datasourceapi.insert_datasource_features(did, features))
+        date2 = timeuuid.uuid1()
+        features = [6,7,8,9]
+        self.assertTrue(datasourceapi.insert_datasource_features(did, date2, features))
         obj = datasourceapi.get_datasource_features(did)
         self.assertEqual(obj.did, did)
+        self.assertEqual(obj.date, date2)
         self.assertEqual(obj.features, sorted(features))
 
     def test_insert_datasource_features_success_no_features(self):
         ''' insert_datasource_features should insert data and return True '''
         did = uuid.uuid4()
+        date = timeuuid.uuid1()
         features = []
-        self.assertTrue(datasourceapi.insert_datasource_features(did, features))
+        self.assertTrue(datasourceapi.insert_datasource_features(did, date, features))
         obj = datasourceapi.get_datasource_features(did)
         self.assertEqual(obj.did, did)
+        self.assertEqual(obj.date, date)
         self.assertEqual(obj.features, [])
-        features = ['d','x','y','z']
-        self.assertTrue(datasourceapi.insert_datasource_features(did, features))
+        features = [1,2,3,4,5]
+        date2 = timeuuid.uuid1()
+        self.assertTrue(datasourceapi.insert_datasource_features(did, date2, features))
         obj = datasourceapi.get_datasource_features(did)
         self.assertEqual(obj.did, did)
+        self.assertEqual(obj.date, date2)
         self.assertEqual(obj.features, sorted(features))
 
     def test_delete_datasource_features_success_no_features(self):
@@ -1603,204 +1498,77 @@ class KomcassApiDatasourceTest(unittest.TestCase):
     def test_delete_datasource_features_success_some_features(self):
         ''' delete_datasource_features should return True even if datasource has no features '''
         did = uuid.uuid4()
+        date = timeuuid.uuid1()
         features = []
-        self.assertTrue(datasourceapi.insert_datasource_features(did, features))
+        self.assertTrue(datasourceapi.insert_datasource_features(did, date, features))
         obj = datasourceapi.get_datasource_features(did)
         self.assertEqual(obj.did, did)
+        self.assertEqual(obj.date, date)
         self.assertEqual(obj.features, [])
         self.assertTrue(datasourceapi.delete_datasource_features(did))
         self.assertIsNone(datasourceapi.get_datasource_features(did))
-        features = ['d','x','y','z']
-        self.assertTrue(datasourceapi.insert_datasource_features(did, features))
+        date2 = timeuuid.uuid1()
+        features = [1,2,3,4,5]
+        self.assertTrue(datasourceapi.insert_datasource_features(did, date2, features))
         obj = datasourceapi.get_datasource_features(did)
         self.assertEqual(obj.did, did)
+        self.assertEqual(obj.date, date2)
         self.assertEqual(obj.features, sorted(features))
         self.assertTrue(datasourceapi.delete_datasource_features(did))
         self.assertIsNone(datasourceapi.get_datasource_features(did))
-
-    def test_get_datasource_supply_features_success_no_feature(self):
-        ''' get_datasource_supply_features should return None if no data is found '''
-        did = uuid.uuid4()
-        supply = 'something'
-        self.assertIsNone(datasourceapi.get_datasource_supply_features(did, supply))
-
-    def test_get_datasource_supply_features_success_features_found(self):
-        ''' get_datasource_supply_features should return a DatasourceSupplyFeatures object '''
-        did = uuid.uuid4()
-        supply = 'my_supply'
-        features = ['a','b','c','d']
-        self.assertTrue(datasourceapi.insert_datasource_supply_features(did, supply, features))
-        obj = datasourceapi.get_datasource_supply_features(did, supply)
-        self.assertEqual(obj.did, did)
-        self.assertEqual(obj.supply, supply)
-        self.assertEqual(obj.features, sorted(features))
-
-    def test_insert_datasource_supply_features_success(self):
-        ''' insert_datasource_supply_features should insert data and return True '''
-        did = uuid.uuid4()
-        supply = 'the_supply'
-        features = ['a','b','c','d']
-        self.assertTrue(datasourceapi.insert_datasource_supply_features(did, supply, features))
-        obj = datasourceapi.get_datasource_supply_features(did, supply)
-        self.assertEqual(obj.did, did)
-        self.assertEqual(obj.supply, supply)
-        self.assertEqual(obj.features, sorted(features))
-        features = ['d','x','y','z']
-        self.assertTrue(datasourceapi.insert_datasource_supply_features(did, supply, features))
-        obj = datasourceapi.get_datasource_supply_features(did, supply)
-        self.assertEqual(obj.did, did)
-        self.assertEqual(obj.supply, supply)
-        self.assertEqual(obj.features, sorted(features))
-
-    def test_insert_datasource_supply_features_success_no_features(self):
-        ''' insert_datasource_supply_features should insert data and return True '''
-        did = uuid.uuid4()
-        supply = 'supply'
-        features = []
-        self.assertTrue(datasourceapi.insert_datasource_supply_features(did, supply, features))
-        obj = datasourceapi.get_datasource_supply_features(did, supply)
-        self.assertEqual(obj.did, did)
-        self.assertEqual(obj.supply, supply)
-        self.assertEqual(obj.features, [])
-        features = ['d','x','y','z']
-        self.assertTrue(datasourceapi.insert_datasource_supply_features(did, supply, features))
-        obj = datasourceapi.get_datasource_supply_features(did, supply)
-        self.assertEqual(obj.did, did)
-        self.assertEqual(obj.supply, supply)
-        self.assertEqual(obj.features, sorted(features))
-
-    def test_delete_datasource_supply_features_success_no_features(self):
-        ''' delete_datasource_supply_features should return True even if datasource supply has no features '''
-        did = uuid.uuid4()
-        supply = 'supply'
-        self.assertIsNone(datasourceapi.get_datasource_supply_features(did, supply))
-        self.assertTrue(datasourceapi.delete_datasource_supply_features(did, supply))
-        self.assertTrue(datasourceapi.delete_datasource_supply_features(did))
-
-    def test_delete_datasource_supply_features_success_some_features(self):
-        ''' delete_datasource_features should return True even if datasource has no features '''
-        did = uuid.uuid4()
-        supply = 'supply'
-        features = []
-        self.assertTrue(datasourceapi.insert_datasource_supply_features(did, supply,  features))
-        obj = datasourceapi.get_datasource_supply_features(did, supply)
-        self.assertEqual(obj.did, did)
-        self.assertEqual(obj.features, [])
-        self.assertTrue(datasourceapi.delete_datasource_supply_features(did, supply))
-        self.assertIsNone(datasourceapi.get_datasource_supply_features(did, supply))
-        features = ['d','x','y','z']
-        self.assertTrue(datasourceapi.insert_datasource_supply_features(did, supply,  features))
-        obj = datasourceapi.get_datasource_supply_features(did, supply)
-        self.assertEqual(obj.did, did)
-        self.assertEqual(obj.features, sorted(features))
-        self.assertTrue(datasourceapi.delete_datasource_supply_features(did))
-        self.assertIsNone(datasourceapi.get_datasource_supply_features(did, supply))
-
-    def test_get_datasource_supplies_guessed_success_no_feature(self):
-        ''' get_datasource_supplies_guessed should return None if no data is found '''
-        did = uuid.uuid4()
-        self.assertIsNone(datasourceapi.get_datasource_supplies_guessed(did))
-
-    def test_get_datasource_supplies_guessed_success_supplies_guessed_found(self):
-        ''' get_datasource_supplies_guessed should return a DatasourceFeatures object '''
-        did = uuid.uuid4()
-        supplies_guessed = ['a','b','c','d']
-        self.assertTrue(datasourceapi.insert_datasource_supplies_guessed(did, supplies_guessed))
-        obj = datasourceapi.get_datasource_supplies_guessed(did)
-        self.assertEqual(obj.did, did)
-        self.assertEqual(obj.supplies, sorted(supplies_guessed))
-
-    def test_insert_datasource_supplies_guessed_success(self):
-        ''' insert_datasource_supplies_guessed should insert data and return True '''
-        did = uuid.uuid4()
-        supplies_guessed = ['a','b','c','d']
-        self.assertTrue(datasourceapi.insert_datasource_supplies_guessed(did, supplies_guessed))
-        obj = datasourceapi.get_datasource_supplies_guessed(did)
-        self.assertEqual(obj.did, did)
-        self.assertEqual(obj.supplies, sorted(supplies_guessed))
-        supplies_guessed = ['d','x','y','z']
-        self.assertTrue(datasourceapi.insert_datasource_supplies_guessed(did, supplies_guessed))
-        obj = datasourceapi.get_datasource_supplies_guessed(did)
-        self.assertEqual(obj.did, did)
-        self.assertEqual(obj.supplies, sorted(supplies_guessed))
-
-    def test_insert_datasource_supplies_guessed_success_no_supplies_guessed(self):
-        ''' insert_datasource_supplies_guessed should insert data and return True '''
-        did = uuid.uuid4()
-        supplies_guessed = []
-        self.assertTrue(datasourceapi.insert_datasource_supplies_guessed(did, supplies_guessed))
-        obj = datasourceapi.get_datasource_supplies_guessed(did)
-        self.assertEqual(obj.did, did)
-        self.assertEqual(obj.supplies, [])
-        supplies_guessed = ['d','x','y','z']
-        self.assertTrue(datasourceapi.insert_datasource_supplies_guessed(did, supplies_guessed))
-        obj = datasourceapi.get_datasource_supplies_guessed(did)
-        self.assertEqual(obj.did, did)
-        self.assertEqual(obj.supplies, sorted(supplies_guessed))
-
-    def test_delete_datasource_supplies_guessed_success_no_supplies_guessed(self):
-        ''' delete_datasource_supplies_guessed should return True even if datasource has no supplies_guessed '''
-        did = uuid.uuid4()
-        self.assertIsNone(datasourceapi.get_datasource_supplies_guessed(did))
-        self.assertTrue(datasourceapi.delete_datasource_supplies_guessed(did))
-
-    def test_delete_datasource_supplies_guessed_success_no_supplies_guessed(self):
-        ''' delete_datasource_supplies_guessed should return True even if datasource has no supplies_guessed '''
-        did = uuid.uuid4()
-        supplies_guessed = []
-        self.assertTrue(datasourceapi.insert_datasource_supplies_guessed(did, supplies_guessed))
-        obj = datasourceapi.get_datasource_supplies_guessed(did)
-        self.assertEqual(obj.did, did)
-        self.assertEqual(obj.supplies, [])
-        self.assertTrue(datasourceapi.delete_datasource_supplies_guessed(did))
-        self.assertIsNone(datasourceapi.get_datasource_supplies_guessed(did))
-        supplies_guessed = ['d','x','y','z']
-        self.assertTrue(datasourceapi.insert_datasource_supplies_guessed(did, supplies_guessed))
-        obj = datasourceapi.get_datasource_supplies_guessed(did)
-        self.assertEqual(obj.did, did)
-        self.assertEqual(obj.supplies, sorted(supplies_guessed))
-        self.assertTrue(datasourceapi.delete_datasource_supplies_guessed(did))
-        self.assertIsNone(datasourceapi.get_datasource_supplies_guessed(did))
 
     def test_get_datasources_by_feature_success_no_data(self):
         ''' get_datasources_by_feature should return an empty list if no data is found '''
-        feature = 'test_get_datasources_by_feature_success_no_data'
+        feature = zlib.adler32(bytes('test_get_datasources_by_feature_success_no_data','utf-8'))
         self.assertEqual(datasourceapi.get_datasources_by_feature(feature), [])
         self.assertEqual(datasourceapi.get_datasources_by_feature(feature, count=100), [])
 
     def test_get_datasources_by_feature_success_some_datasources_found(self):
         ''' get_datasources_by_feature should return a did list with the data found '''
-        feature = 'test_get_datasources_by_feature_success_some_datasources_found'
+        feature = zlib.adler32(bytes('test_get_datasources_by_feature_success_some_datasources_found','utf-8'))
         for i in range(1,100):
             did = uuid.uuid4()
-            self.assertTrue(datasourceapi.insert_datasource_by_feature(feature,did))
-        dids = datasourceapi.get_datasources_by_feature(feature)
-        self.assertEqual(len(dids),1)
-        dids = datasourceapi.get_datasources_by_feature(feature, count=50)
-        self.assertEqual(len(dids),50)
-        self.assertEqual(len(set(dids)),50)
-        dids = datasourceapi.get_datasources_by_feature(feature, count=1000)
-        self.assertEqual(len(dids),99)
-        self.assertEqual(len(set(dids)),99)
+            weight = i/(i+1)
+            self.assertTrue(datasourceapi.insert_datasource_by_feature(feature, did, weight))
+        datasources = datasourceapi.get_datasources_by_feature(feature)
+        self.assertEqual(len(datasources),1)
+        datasources = datasourceapi.get_datasources_by_feature(feature, count=50)
+        self.assertEqual(len(datasources),50)
+        datasources = datasourceapi.get_datasources_by_feature(feature, count=1000)
+        self.assertEqual(len(datasources),99)
 
-    def test_insert_datasources_by_feature_success(self):
-        ''' insert_datasources_by_feature should return True '''
-        feature = 'test_insert_datasources_by_feature_success'
+    def test_insert_datasource_by_feature_success(self):
+        ''' insert_datasource_by_feature should return True '''
+        feature = zlib.adler32(bytes('test_insert_datasources_by_feature_success','utf-8'))
         for i in range(1,100):
             did = uuid.uuid4()
-            self.assertTrue(datasourceapi.insert_datasource_by_feature(feature,did))
-        dids = datasourceapi.get_datasources_by_feature(feature)
-        self.assertEqual(len(dids),1)
-        dids = datasourceapi.get_datasources_by_feature(feature, count=50)
-        self.assertEqual(len(dids),50)
-        self.assertEqual(len(set(dids)),50)
-        dids = datasourceapi.get_datasources_by_feature(feature, count=1000)
-        self.assertEqual(len(dids),99)
-        self.assertEqual(len(set(dids)),99)
+            weight = i/(i+1)
+            self.assertTrue(datasourceapi.insert_datasource_by_feature(feature, did, weight))
+        datasources = datasourceapi.get_datasources_by_feature(feature)
+        self.assertEqual(len(datasources),1)
+        datasources = datasourceapi.get_datasources_by_feature(feature, count=50)
+        self.assertEqual(len(datasources),50)
+        datasources = datasourceapi.get_datasources_by_feature(feature, count=1000)
+        self.assertEqual(len(datasources),99)
+
+    def test_insert_datasource_by_features_success_batch(self):
+        ''' insert_datasource_by_features should return True '''
+        did = uuid.uuid4()
+        info = []
+        for i in range(1,1000):
+            feature = zlib.adler32(bytes('test_insert_datasource_by_features_success_batch'+str(i),'utf-8'))
+            weight = i/(i+1)
+            info.append({'feature':feature, 'weight':weight})
+        self.assertTrue(datasourceapi.insert_datasource_by_features(did, info))
+        for i in range(1,1000):
+            feat = zlib.adler32(bytes('test_insert_datasource_by_features_success_batch'+str(i),'utf-8'))
+            ds = datasourceapi.get_datasources_by_feature(feat, count=1)
+            self.assertEqual(len(ds),1)
+            self.assertEqual(ds[0].did,did)
 
     def test_delete_datasource_by_feature_success_no_previous_data(self):
         ''' delete_datasources_by_feature should return True and delete data if existed '''
-        feature = 'test_delete_datasources_by_feature_success_no_previous_data'
+        feature = zlib.adler32(bytes('test_delete_datasources_by_feature_success_no_previous_data','utf-8'))
         dids = datasourceapi.get_datasources_by_feature(feature)
         self.assertEqual(len(dids),0)
         for i in range(1,100):
@@ -1811,88 +1579,39 @@ class KomcassApiDatasourceTest(unittest.TestCase):
 
     def test_delete_datasource_by_feature_success_previous_data_existed(self):
         ''' delete_datasources_by_feature should return True and delete data if existed '''
-        feature = 'test_delete_datasources_by_feature_success_previous_data_existed'
+        feature = zlib.adler32(bytes('test_delete_datasources_by_feature_success_previous_data_existed','utf-8'))
+        weight = 1
         dids = [uuid.uuid4() for i in range(1,100)]
         for did in dids:
-            self.assertTrue(datasourceapi.insert_datasource_by_feature(feature,did))
-        dids = datasourceapi.get_datasources_by_feature(feature, count=1000)
-        self.assertEqual(len(dids),99)
-        self.assertEqual(len(set(dids)),99)
-        for i,did in enumerate(dids):
-            self.assertTrue(datasourceapi.delete_datasource_by_feature(feature,did))
-            dids = datasourceapi.get_datasources_by_feature(feature, count=1000)
-            self.assertEqual(len(set(dids)),98-i)
-            self.assertFalse(did in dids)
-        dids = datasourceapi.get_datasources_by_feature(feature)
-        self.assertEqual(len(dids),0)
+            self.assertTrue(datasourceapi.insert_datasource_by_feature(feature,did, weight))
+        dss = datasourceapi.get_datasources_by_feature(feature, count=1000)
+        self.assertEqual(len(dss),99)
+        for i,ds in enumerate(dss):
+            self.assertTrue(datasourceapi.delete_datasource_by_feature(feature,ds.did))
+            remaining = datasourceapi.get_datasources_by_feature(feature, count=1000)
+            self.assertEqual(len(remaining),98-i)
+            for r in remaining:
+                self.assertNotEqual(r.did,ds.did)
+        dss = datasourceapi.get_datasources_by_feature(feature)
+        self.assertEqual(len(dss),0)
 
-    def test_get_datasources_by_supply_feature_success_no_data(self):
-        ''' get_datasources_by_supply_feature should return an empty list if no data is found '''
-        feature = 'test_get_datasources_by_supply_feature_success_no_data'
-        supply = 'supply'
-        self.assertEqual(datasourceapi.get_datasources_by_supply_feature(feature, supply), [])
-        self.assertEqual(datasourceapi.get_datasources_by_supply_feature(feature, supply, count=100), [])
-
-    def test_get_datasources_by_supply_feature_success_some_datasources_found(self):
-        ''' get_datasources_by_supply_feature should return a did list with the data found '''
-        feature = 'test_get_datasources_by_supply_feature_success_some_datasources_found'
-        supply = 'supply'
-        for i in range(1,100):
-            did = uuid.uuid4()
-            self.assertTrue(datasourceapi.insert_datasource_by_supply_feature(feature, supply, did))
-        dids = datasourceapi.get_datasources_by_supply_feature(feature, supply)
-        self.assertEqual(len(dids),1)
-        dids = datasourceapi.get_datasources_by_supply_feature(feature, supply, count=50)
-        self.assertEqual(len(dids),50)
-        self.assertEqual(len(set(dids)),50)
-        dids = datasourceapi.get_datasources_by_supply_feature(feature, supply, count=1000)
-        self.assertEqual(len(dids),99)
-        self.assertEqual(len(set(dids)),99)
-
-    def test_insert_datasources_by_supply_feature_success(self):
-        ''' insert_datasources_by_supply_feature should return True '''
-        feature = 'test_insert_datasources_by_supply_feature_success'
-        supply = 'supply'
-        for i in range(1,100):
-            did = uuid.uuid4()
-            self.assertTrue(datasourceapi.insert_datasource_by_supply_feature(feature, supply, did))
-        dids = datasourceapi.get_datasources_by_supply_feature(feature, supply)
-        self.assertEqual(len(dids),1)
-        dids = datasourceapi.get_datasources_by_supply_feature(feature, supply, count=50)
-        self.assertEqual(len(dids),50)
-        self.assertEqual(len(set(dids)),50)
-        dids = datasourceapi.get_datasources_by_supply_feature(feature, supply, count=1000)
-        self.assertEqual(len(dids),99)
-        self.assertEqual(len(set(dids)),99)
-
-    def test_delete_datasource_by_supply_feature_success_no_previous_data(self):
-        ''' delete_datasource_by_supply_feature should return True and delete data if existed '''
-        feature = 'test_delete_datasource_by_supply_feature_success_no_previous_data'
-        supply = 'something'
-        dids = datasourceapi.get_datasources_by_supply_feature(feature, supply)
-        self.assertEqual(len(dids),0)
-        for i in range(1,100):
-            did = uuid.uuid4()
-            self.assertTrue(datasourceapi.delete_datasource_by_supply_feature(feature, supply, did))
-        dids = datasourceapi.get_datasources_by_supply_feature(feature, supply)
-        self.assertEqual(len(dids),0)
-
-    def test_delete_datasource_by_supply_feature_success_previous_data_existed(self):
-        ''' delete_datasource_by_feature should return True and delete data if existed '''
-        feature = 'test_delete_datasource_by_supply_feature_success_previous_data_existed'
-        supply = 'thesupply'
-        dids = [uuid.uuid4() for i in range(1,100)]
-        for did in dids:
-            self.assertTrue(datasourceapi.insert_datasource_by_supply_feature(feature, supply, did))
-            self.assertTrue(datasourceapi.insert_datasource_by_supply_feature(feature, supply+'bis', did))
-        dids = datasourceapi.get_datasources_by_supply_feature(feature, supply, count=1000)
-        self.assertEqual(len(dids),99)
-        self.assertEqual(len(set(dids)),99)
-        for i,did in enumerate(dids):
-            self.assertTrue(datasourceapi.delete_datasource_by_supply_feature(feature, supply, did))
-            dids = datasourceapi.get_datasources_by_supply_feature(feature, supply, count=1000)
-            self.assertEqual(len(set(dids)),98-i)
-            self.assertFalse(did in dids)
-        dids = datasourceapi.get_datasources_by_supply_feature(feature, supply)
-        self.assertEqual(len(dids),0)
+    def test_delete_datasource_by_features_success_batch(self):
+        ''' delete_datasource_by_features should return True '''
+        did = uuid.uuid4()
+        info = []
+        for i in range(1,1000):
+            feature = zlib.adler32(bytes('test_delete_datasource_by_features_success_batch'+str(i),'utf-8'))
+            weight = i/(i+1)
+            info.append({'feature':feature, 'weight':weight})
+        self.assertTrue(datasourceapi.insert_datasource_by_features(did, info))
+        for i in range(1,1000):
+            feat = zlib.adler32(bytes('test_delete_datasource_by_features_success_batch'+str(i),'utf-8'))
+            the_ds = datasourceapi.get_datasources_by_feature(feat, count=1)
+            self.assertEqual(len(the_ds),1)
+            self.assertEqual(the_ds[0].did,did)
+        self.assertTrue(datasourceapi.delete_datasource_by_features(did, [item['feature'] for item in info]))
+        for i in range(1,1000):
+            feat = zlib.adler32(bytes('test_delete_datasource_by_features_success_batch'+str(i),'utf-8'))
+            the_ds = datasourceapi.get_datasources_by_feature(feat, count=1)
+            self.assertEqual(len(the_ds),0)
 

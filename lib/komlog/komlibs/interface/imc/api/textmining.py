@@ -3,14 +3,14 @@ Textmining message definitions
 
 '''
 
-import json
 from komlog.komlibs.events.model import types as eventstypes
 from komlog.komlibs.general.validation import arguments as args
 from komlog.komlibs.gestaccount.datapoint import api as datapointapi
 from komlog.komlibs.gestaccount.datasource import api as datasourceapi
 from komlog.komlibs.graph.relations import vertex
-from komlog.komlibs.interface.imc.model import messages, responses
 from komlog.komlibs.interface.imc import status, exceptions
+from komlog.komlibs.interface.imc.model import messages, responses
+from komlog.komlibs.interface.web.model import operation
 
 @exceptions.ExceptionHandler
 def process_message_GDTREE(message):
@@ -68,14 +68,25 @@ def process_message_FILLDS(message):
         raise exceptions.BadParametersException(error=Errors.E_IAATM_FILLDS_IDID)
     if not args.is_valid_date(date):
         raise exceptions.BadParametersException(error=Errors.E_IAATM_FILLDS_IDT)
-    store_info=datapointapi.store_datasource_values(did=did, date=date)
-    if store_info:
+    result = datapointapi.store_datasource_values(did=did, date=date)
+    if result:
         response.status=status.IMC_STATUS_OK
-        if len(store_info['dp_found'])>0:
+        if result['has_dtree'] == False:
+            # ds has no associated dtree
+            response.add_imc_message(messages.AssociateExistingDTreeMessage(did=message.did))
+        elif result['dp_found']:
+            # dtree has identified some dps in this sample
             uris=[]
-            for dp in store_info['dp_found']:
+            for dp in result['dp_found']:
                 uris.append({'type':vertex.DATAPOINT,'id':dp['pid'],'uri':dp['uri']})
             response.add_imc_message(messages.UrisUpdatedMessage(uris=uris,date=date))
+        elif result['non_dp_uris']:
+            # dtree has not identified any dp, but has identified uris not monitored yet.
+            response.add_imc_message(messages.MonitorIdentifiedUris(did=message.did, date=message.date))
+        elif not result['dp_missing']:
+            # dtree has not identified any dp, any uri missing, and any dp is pending for identification.
+            # we try to select another dtree for this ds (This operations has a max frec configured internally)
+            response.add_imc_message(messages.AssociateExistingDTreeMessage(did=message.did))
     else:
         response.error=Errors.E_IAATM_FILLDS_ESDSV
         response.status=status.IMC_STATUS_INTERNAL_ERROR
@@ -98,47 +109,40 @@ def process_message_GENTEXTSUMMARY(message):
     return response
 
 @exceptions.ExceptionHandler
-def process_message_IDNEWDPS(message):
+def process_message_AEDTREE(message):
     response=responses.ImcInterfaceResponse(status=status.IMC_STATUS_OK, message_type=message._type_, message_params=message.to_serialization())
+    result = datapointapi.select_dtree_for_datasource(message.did)
+    if result['dtree'] != None:
+        response.add_imc_message(messages.MonitorIdentifiedUrisMessage(did=message.did))
+    response.status=status.IMC_STATUS_OK
     return response
 
 @exceptions.ExceptionHandler
-def process_message_FEATDPUPD(message):
-    response=responses.ImcInterfaceResponse(status=status.IMC_STATUS_OK, message_type=message._type_, message_params=message.to_serialization())
-    result = datasourceapi.update_datapoint_features(message.pid)
-    ressponse.status = status.IMC_STATUS_OK
-    return response
-
-@exceptions.ExceptionHandler
-def process_message_FEATDSUPD(message):
+def process_message_DSFEATUPD(message):
     response=responses.ImcInterfaceResponse(status=status.IMC_STATUS_OK, message_type=message._type_, message_params=message.to_serialization())
     result = datasourceapi.update_datasource_features(message.did)
-    if result['supplies_not_found'] == True:
-        msg = messages.IdentifySuppliesMessage(message.did)
-        response.add_imc_message(msg)
-    elif result['pending_supplies_found'] == True:
-        msg = messages.IdentifyNewDatapointsMessage(message.did)
-        response.add_imc_message(msg)
     response.status = status.IMC_STATUS_OK
     return response
 
 @exceptions.ExceptionHandler
-def process_message_IDSUPP(message):
+def process_message_MONIDU(message):
+    ''' Processing function for message MONITOR_IDENTIFIED_URIS_MESSAGE '''
     response=responses.ImcInterfaceResponse(status=status.IMC_STATUS_OK, message_type=message._type_, message_params=message.to_serialization())
-    result = datasourceapi.identify_supplies(message.did)
-    if result['supplies_found'] == True:
-        msg = messages.IdentifyNewDatapointsMessage(message.did)
-        response.add_imc_message(msg)
-    response.status = status.IMC_STATUS_OK
-    return response
-
-@exceptions.ExceptionHandler
-def process_message_SMPCLASS(message):
-    response=responses.ImcInterfaceResponse(status=status.IMC_STATUS_PROCESSING, message_type=message._type_, message_params=message.to_serialization())
-    result = datasourceapi.classify_sample(message.did, message.date)
-    if result['new_ds_features'] == True:
-        msg = messages.UpdateDatasourceFeaturesMessage(message.did)
-        response.add_imc_message(msg)
+    result = datapointapi.monitor_identified_uris(message.did, message.date)
+    uris = []
+    uid = None
+    for dp in result['monitored']:
+        webop=operation.NewDatasourceDatapointOperation(uid=dp['uid'],aid=dp['aid'],did=dp['did'],pid=dp['pid'])
+        authop=webop.get_auth_operation()
+        params=webop.get_params()
+        response.add_imc_message(messages.UpdateQuotesMessage(operation=authop, params=params))
+        response.add_imc_message(messages.ResourceAuthorizationUpdateMessage(operation=authop, params=params))
+        if dp['previously_existed'] == False:
+            response.add_imc_message(messages.NewDPWidgetMessage(uid=dp['uid'],pid=dp['pid']))
+            uris.append({'type':vertex.DATAPOINT, 'id':dp['pid'], 'uri':dp['uri']})
+            uid = uid if uid else dp['uid']
+    if uris:
+        response.add_imc_message(messages.HookNewUrisMessage(uid=uid, uris=uris, date=result['sample_date']))
     response.status = status.IMC_STATUS_OK
     return response
 

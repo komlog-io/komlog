@@ -1394,7 +1394,6 @@ class GestaccountDatapointApiTest(unittest.TestCase):
         datapointname='test_monitor_new_datapoint_success'
         with self.assertRaises(exceptions.DatapointUnsupportedOperationException) as cm:
             datapoint=api.monitor_new_datapoint(did=did, date=date, position=position, length=length, datapointname=datapointname)
-            print(str(datapoint))
         self.assertEqual(cm.exception.error, Errors.E_GPA_CRD_AAD)
 
     def test_monitor_new_datapoint_success_uri_already_existed_with_same_datasource(self):
@@ -1597,6 +1596,21 @@ class GestaccountDatapointApiTest(unittest.TestCase):
             api.store_datasource_values( did=did, date=date)
         self.assertEqual(cm.exception.error, Errors.E_GPA_SDSV_DSNF)
 
+    def test_store_datasource_values_datasource_has_no_dtree(self):
+        ''' store_datasource_values should return if it does not have a dtree '''
+        datasourcename='test_store_datasource_values_datasource_has_no_dtree'
+        datasource=datasourceapi.create_datasource(uid=self.user['uid'], aid=self.agent['aid'], datasourcename=datasourcename)
+        did=datasource['did']
+        date=timeuuid.uuid1()
+        store_info = api.store_datasource_values(did=did, date=date)
+        self.assertEqual(store_info['dp_missing'],[])
+        self.assertEqual(store_info['dp_found_twice'],[])
+        self.assertEqual(store_info['non_dp_uris'],[])
+        self.assertEqual(store_info['dp_found'],{})
+        self.assertEqual(store_info['did'],did)
+        self.assertEqual(store_info['uri'],datasourcename)
+        self.assertEqual(store_info['has_dtree'],False)
+
     def test_store_datasource_values_failure_datasource_data_not_found(self):
         ''' store_datasource_values should fail if datasource data is not found '''
         datasourcename='test_store_datasource_values_failure_datasource_data_not_found'
@@ -1605,8 +1619,24 @@ class GestaccountDatapointApiTest(unittest.TestCase):
         date=timeuuid.uuid1()
         datapointname='test_store_datasource_values_failure_dsdata_not_found'
         datapoint=api.create_datasource_datapoint(did=did, datapoint_uri=datapointname)
+
+    def test_store_datasource_values_failure_datasource_data_not_found(self):
+        ''' store_datasource_values should succeed '''
+        datasourcename='test_store_datasource_values_failure_datasource_data_not_found'
+        datasource=datasourceapi.create_datasource(uid=self.user['uid'], aid=self.agent['aid'], datasourcename=datasourcename)
+        did=datasource['did']
+        date=timeuuid.uuid1()
+        content='store_datasource_values content 23 32 554 and \nnew lines\ttabs\tetc..'
+        self.assertTrue(datasourceapi.store_datasource_data(did=did, date=date, content=content))
+        self.assertTrue(datasourceapi.generate_datasource_map(did=did, date=date))
+        #first var should be a position 32 and length 2
+        position=32
+        length=2
+        datapointname='datapoint'
+        datapoint=api.monitor_new_datapoint(did=did, date=date, position=position, length=length, datapointname=datapointname)
+        date2 = timeuuid.uuid1()
         with self.assertRaises(exceptions.DatasourceDataNotFoundException) as cm:
-            api.store_datasource_values(did=did, date=date)
+            api.store_datasource_values(did=did, date=date2)
         self.assertEqual(cm.exception.error, Errors.E_GPA_GDH_DDNF)
 
     def test_store_datasource_values_success_one_datapoint(self):
@@ -1628,7 +1658,8 @@ class GestaccountDatapointApiTest(unittest.TestCase):
         self.assertEqual(store_info['dp_found_twice'],[])
         self.assertEqual(store_info['non_dp_uris'],[])
         self.assertEqual(store_info['dp_found'],[{'pid':datapoint['pid'],'uri':datapoint['datapointname']}])
-        self.assertEqual(store_info['ds_info'],{'did':did,'uri':datasourcename})
+        self.assertEqual(store_info['did'],did)
+        self.assertEqual(store_info['uri'],datasourcename)
         data=api.get_datapoint_data(pid=datapoint['pid'], fromdate=date, todate=date)
         self.assertEqual(len(data),1)
         self.assertEqual(int(data[0]['value']),23)
@@ -1825,4 +1856,594 @@ class GestaccountDatapointApiTest(unittest.TestCase):
         pid=datapoint['pid']
         pid_hooks=api.get_datapoint_hooks(pid=pid)
         self.assertEqual(pid_hooks,[])
+
+    def test_monitor_identified_uris_failure_invalid_did(self):
+        ''' monitor_identified_uris should fail if did is invalid '''
+        dids=['asdfasd',234234,234234.234,{'a':'dict'},None,['a','list'],{'set'},('tupl','e'),timeuuid.uuid1(),uuid.uuid4().hex]
+        date = timeuuid.uuid1()
+        for did in dids:
+            with self.assertRaises(exceptions.BadParametersException) as cm:
+                api.monitor_identified_uris(did=did, date=date)
+            self.assertEqual(cm.exception.error, Errors.E_GPA_MIU_IDID)
+
+    def test_monitor_identified_uris_failure_invalid_date(self):
+        ''' monitor_identified_uris should fail if date is invalid '''
+        did = uuid.uuid4()
+        dates = ['asdfasd',234234,234234.234,{'a':'dict'},['a','list'],{'set'},('tupl','e'),timeuuid.uuid1().hex,uuid.uuid4()]
+        for date in dates:
+            with self.assertRaises(exceptions.BadParametersException) as cm:
+                api.monitor_identified_uris(did=did, date=date)
+            self.assertEqual(cm.exception.error, Errors.E_GPA_MIU_IDATE)
+
+    def test_monitor_identified_uris_failure_datasource_not_found(self):
+        ''' monitor_identified_uris should fail if datasource does not exist '''
+        did = uuid.uuid4()
+        date = timeuuid.uuid1()
+        with self.assertRaises(exceptions.DatasourceNotFoundException) as cm:
+            api.monitor_identified_uris(did=did, date=date)
+        self.assertEqual(cm.exception.error, Errors.E_GPA_MIU_DSNF)
+
+    def test_monitor_identified_uris_failure_dtree_not_found(self):
+        ''' monitor_identified_uris should fail if dtree does not exist '''
+        datasourcename='test_monitor_identified_uris_failure_dtree_not_found'
+        datasource=datasourceapi.create_datasource(uid=self.user['uid'], aid=self.agent['aid'], datasourcename=datasourcename)
+        did=datasource['did']
+        date=timeuuid.uuid1()
+        with self.assertRaises(exceptions.DatapointDTreeNotFoundException) as cm:
+            api.monitor_identified_uris(did=did, date=date)
+        self.assertEqual(cm.exception.error, Errors.E_GPA_MIU_DTRNF)
+
+    def test_monitor_identified_uris_failure_dasource_data_not_found(self):
+        ''' monitor_identified_uris should fail if datasource data is not found '''
+        datasourcename='test_monitor_identified_uris_failure_dasource_data_not_found'
+        datasource=datasourceapi.create_datasource(uid=self.user['uid'], aid=self.agent['aid'], datasourcename=datasourcename)
+        did=datasource['did']
+        date=timeuuid.uuid1()
+        content='store_datasource_values content 23 32 554 and \nnew lines\ttabs\tetc..'
+        self.assertTrue(datasourceapi.store_datasource_data(did=did, date=date, content=content))
+        self.assertTrue(datasourceapi.generate_datasource_map(did=did, date=date))
+        #first var should be a position 32 and length 2
+        position=32
+        length=2
+        datapointname='datapoint'
+        datapoint=api.monitor_new_datapoint(did=did, date=date, position=position, length=length, datapointname=datapointname)
+        date2 = timeuuid.uuid1()
+        with self.assertRaises(exceptions.DatasourceDataNotFoundException) as cm:
+            api.monitor_identified_uris(did=did, date=date2)
+        self.assertEqual(cm.exception.error, Errors.E_GPA_GDH_DDNF)
+
+    def test_monitor_identified_uris_no_new_uris_found(self):
+        ''' monitor_identified_uris should do nothing if no new uri is found '''
+        datasourcename='test_monitor_identified_uris_no_new_uris_found'
+        datasource=datasourceapi.create_datasource(uid=self.user['uid'], aid=self.agent['aid'], datasourcename=datasourcename)
+        did=datasource['did']
+        date=timeuuid.uuid1()
+        content='store_datasource_values content 23 32 554 and \nnew lines\ttabs\tetc..'
+        self.assertTrue(datasourceapi.store_datasource_data(did=did, date=date, content=content))
+        self.assertTrue(datasourceapi.generate_datasource_map(did=did, date=date))
+        #first var should be a position 32 and length 2
+        position=32
+        length=2
+        datapointname='datapoint'
+        datapoint=api.monitor_new_datapoint(did=did, date=date, position=position, length=length, datapointname=datapointname)
+        store_result = api.store_datasource_values(did=did, date=date)
+        # no aditional uri has been detected with this dtree
+        result = api.monitor_identified_uris(did=did, date=date)
+        self.assertEqual(result['pending'],[])
+        self.assertEqual(result['monitored'],[])
+        self.assertEqual(result['monitoring_allowed'],True)
+        self.assertEqual(result['monitoring_bounded'],False)
+        self.assertEqual(result['more_than_once'],[])
+        self.assertEqual(result['dtree_info'],None)
+
+    def test_monitor_identified_uris_monitoring_not_allowed(self):
+        ''' monitor_identified_uris should do nothing if user has forbidden monitoring '''
+        datasourcename='test_monitor_identified_uris_monitoring_not_allowed'
+        datasource=datasourceapi.create_datasource(uid=self.user['uid'], aid=self.agent['aid'], datasourcename=datasourcename)
+        did=datasource['did']
+        date=timeuuid.uuid1()
+        content='store_datasource_values content 23 32 554 and \nnew lines\ttabs\tetc..'
+        self.assertTrue(datasourceapi.store_datasource_data(did=did, date=date, content=content))
+        self.assertTrue(datasourceapi.generate_datasource_map(did=did, date=date))
+        self.assertTrue(datasourceapi.update_datasource_supplies(did=did, supplies=[]))
+        #first var should be a position 32 and length 2
+        position=32
+        length=2
+        datapointname='datapoint'
+        datapoint=api.monitor_new_datapoint(did=did, date=date, position=position, length=length, datapointname=datapointname)
+        store_result = api.store_datasource_values(did=did, date=date)
+        # no aditional uri has been detected with this dtree
+        result = api.monitor_identified_uris(did=did, date=date)
+        self.assertEqual(result['pending'],[])
+        self.assertEqual(result['monitored'],[])
+        self.assertEqual(result['monitoring_allowed'],False)
+        self.assertEqual(result['monitoring_bounded'],False)
+        self.assertEqual(result['more_than_once'],[])
+        self.assertEqual(result['dtree_info'],None)
+
+    def test_monitor_identified_uris_monitoring_allowed_supply_allowed_already_exists(self):
+        ''' monitor_identified_uris should identify pending supplies '''
+        datasourcename='test_monitor_identified_uris_monitoring_allowed_supply_allowed_already_exists'
+        datasource=datasourceapi.create_datasource(uid=self.user['uid'], aid=self.agent['aid'], datasourcename=datasourcename)
+        did=datasource['did']
+        date=timeuuid.uuid1()
+        content='store_datasource_values content 23 32 554 and \nnew lines\ttabs\tetc..'
+        self.assertTrue(datasourceapi.store_datasource_data(did=did, date=date, content=content))
+        self.assertTrue(datasourceapi.generate_datasource_map(did=did, date=date))
+        self.assertTrue(datasourceapi.update_datasource_supplies(did=did, supplies=['datapoint_uri']))
+        #first var should be a position 32 and length 2
+        position=32
+        length=2
+        datapointname='datapoint_uri'
+        datapoint=api.monitor_new_datapoint(did=did, date=date, position=position, length=length, datapointname=datapointname)
+        store_result = api.store_datasource_values(did=did, date=date)
+        # no aditional uri has been detected with this dtree
+        result = api.monitor_identified_uris(did=did, date=date)
+        self.assertEqual(result['pending'],[])
+        self.assertEqual(result['monitored'],[])
+        self.assertEqual(result['monitoring_allowed'],True)
+        self.assertEqual(result['monitoring_bounded'],True)
+        self.assertEqual(result['more_than_once'],[])
+        self.assertEqual(result['dtree_info'],None)
+
+    def test_monitor_identified_uris_monitoring_allowed_supply_allowed_does_not_exist(self):
+        ''' monitor_identified_uris should identify pending supplies '''
+        datasourcename='test_monitor_identified_uris_monitoring_allowed_supply_allowed_does_not_exist'
+        datasource=datasourceapi.create_datasource(uid=self.user['uid'], aid=self.agent['aid'], datasourcename=datasourcename)
+        did=datasource['did']
+        date=timeuuid.uuid1()
+        content='store_datasource_values content 23 32 554 and \nnew lines\ttabs\tetc..'
+        self.assertTrue(datasourceapi.store_datasource_data(did=did, date=date, content=content))
+        self.assertTrue(datasourceapi.generate_datasource_map(did=did, date=date))
+        self.assertTrue(datasourceapi.update_datasource_supplies(did=did, supplies=['datapoint_uri']))
+        #first var should be a position 32 and length 2
+        position=32
+        length=2
+        datapointname='datapoint_uri'
+        datapoint=api.monitor_new_datapoint(did=did, date=date, position=position, length=length, datapointname=datapointname)
+        store_result = api.store_datasource_values(did=did, date=date)
+        datasourcename2= 'test_monitor_identified_uris_monitoring_allowed_supply_allowed_does_not_exist_2'
+        datasource2=datasourceapi.create_datasource(uid=self.user['uid'], aid=self.agent['aid'], datasourcename=datasourcename2)
+        did2=datasource2['did']
+        date2=timeuuid.uuid1()
+        content='store_datasource_values content 23 32 554 and \nnew lines\ttabs\tetc..'
+        self.assertTrue(datasourceapi.store_datasource_data(did=did2, date=date2, content=content))
+        self.assertTrue(datasourceapi.generate_datasource_map(did=did2, date=date2))
+        self.assertTrue(datasourceapi.update_datasource_supplies(did=did2, supplies=['datapoint_uri']))
+        self.assertTrue(cassapidatasource.insert_datapoint_classifier_dtree(did2, datapoint['dtree'].serialize()))
+        # datapoint_uri should be detected and monitored
+        result = api.monitor_identified_uris(did=did2, date=date2)
+        self.assertEqual(result['pending'],[])
+        self.assertEqual(result['monitoring_allowed'],True)
+        self.assertEqual(result['monitoring_bounded'],True)
+        self.assertEqual(result['more_than_once'],[])
+        self.assertEqual(len(result['monitored']),1)
+        self.assertEqual(result['monitored'][0]['uri'], '.'.join((datasourcename2,'datapoint_uri')))
+        self.assertEqual(result['monitored'][0]['did'], did2)
+        self.assertEqual(result['monitored'][0]['aid'], datasource2['aid'])
+        self.assertEqual(result['monitored'][0]['uid'], datasource2['uid'])
+        self.assertEqual(result['monitored'][0]['previously_existed'], False)
+        self.assertEqual(result['dtree_info']['classified'],['datapoint_uri'])
+        self.assertEqual(result['dtree_info']['conflicts'],[])
+        self.assertEqual(result['dtree_info']['no_positive_tr_set'],[])
+        self.assertNotEqual(result['dtree_info']['dtree'],None)
+
+    def test_monitor_identified_uris_monitoring_allowed_no_predefined_supply_monitor_everything_it_finds(self):
+        ''' monitor_identified_uris should identify every classified uri '''
+        datasourcename='test_monitor_identified_uris_monitoring_allowed_no_predefined_supply_monitor_everything_it_finds'
+        datasource=datasourceapi.create_datasource(uid=self.user['uid'], aid=self.agent['aid'], datasourcename=datasourcename)
+        did=datasource['did']
+        date=timeuuid.uuid1()
+        content='store_datasource_values content 23 32 554 and \nnew lines\ttabs\tetc..'
+        self.assertTrue(datasourceapi.store_datasource_data(did=did, date=date, content=content))
+        self.assertTrue(datasourceapi.generate_datasource_map(did=did, date=date))
+        self.assertTrue(datasourceapi.update_datasource_supplies(did=did, supplies=['datapoint_uri']))
+        #first var should be a position 32 and length 2
+        position=32
+        length=2
+        datapointname='datapoint_uri'
+        datapoint=api.monitor_new_datapoint(did=did, date=date, position=position, length=length, datapointname=datapointname)
+        store_result = api.store_datasource_values(did=did, date=date)
+        datasourcename2= 'test_monitor_identified_uris_monitoring_allowed_no_predefined_supply_monitor_everything_it_finds_2'
+        datasource2=datasourceapi.create_datasource(uid=self.user['uid'], aid=self.agent['aid'], datasourcename=datasourcename2)
+        did2=datasource2['did']
+        date2=timeuuid.uuid1()
+        content='store_datasource_values content 23 32 554 and \nnew lines\ttabs\tetc..'
+        self.assertTrue(datasourceapi.store_datasource_data(did=did2, date=date2, content=content))
+        self.assertTrue(datasourceapi.generate_datasource_map(did=did2, date=date2))
+        #self.assertTrue(datasourceapi.update_datasource_supplies(did=did2, supplies=['datapoint_uri']))
+        self.assertTrue(cassapidatasource.insert_datapoint_classifier_dtree(did2, datapoint['dtree'].serialize()))
+        # datapoint_uri should be detected and monitored
+        result = api.monitor_identified_uris(did=did2, date=date2)
+        self.assertEqual(result['pending'],[])
+        self.assertEqual(result['monitoring_allowed'],True)
+        self.assertEqual(result['monitoring_bounded'],False)
+        self.assertEqual(result['more_than_once'],[])
+        self.assertEqual(len(result['monitored']),1)
+        self.assertEqual(result['monitored'][0]['uri'], '.'.join((datasourcename2,'datapoint_uri')))
+        self.assertEqual(result['monitored'][0]['did'], did2)
+        self.assertEqual(result['monitored'][0]['aid'], datasource2['aid'])
+        self.assertEqual(result['monitored'][0]['uid'], datasource2['uid'])
+        self.assertEqual(result['monitored'][0]['previously_existed'], False)
+        self.assertEqual(result['dtree_info']['classified'],['datapoint_uri'])
+        self.assertEqual(result['dtree_info']['conflicts'],[])
+        self.assertEqual(result['dtree_info']['no_positive_tr_set'],[])
+        self.assertNotEqual(result['dtree_info']['dtree'],None)
+
+    def test_monitor_identified_uris_monitoring_allowed_some_predefined_supply_monitor_allowed_only(self):
+        ''' monitor_identified_uris should identify only allowed and pending uris '''
+        datasourcename='test_monitor_identified_uris_monitoring_allowed_some_predefined_supply_monitor_allowed_only'
+        datasource=datasourceapi.create_datasource(uid=self.user['uid'], aid=self.agent['aid'], datasourcename=datasourcename)
+        did=datasource['did']
+        date=timeuuid.uuid1()
+        content='store_datasource_values content 23 32 554 and \nnew lines\ttabs\tetc..'
+        self.assertTrue(datasourceapi.store_datasource_data(did=did, date=date, content=content))
+        self.assertTrue(datasourceapi.generate_datasource_map(did=did, date=date))
+        self.assertTrue(datasourceapi.update_datasource_supplies(did=did, supplies=['datapoint_uri']))
+        #first var should be a position 32 and length 2
+        position=32
+        length=2
+        datapointname='datapoint_uri1'
+        datapoint=api.monitor_new_datapoint(did=did, date=date, position=position, length=length, datapointname=datapointname)
+        position=35
+        length=2
+        datapointname='datapoint_uri2'
+        datapoint2=api.monitor_new_datapoint(did=did, date=date, position=position, length=length, datapointname=datapointname)
+        position=38
+        length=3
+        datapointname='datapoint_uri3'
+        datapoint3=api.monitor_new_datapoint(did=did, date=date, position=position, length=length, datapointname=datapointname)
+        store_result = api.store_datasource_values(did=did, date=date)
+        datasourcename2= 'test_monitor_identified_uris_monitoring_allowed_some_predefined_supply_monitor_allowed_only_2'
+        datasource2=datasourceapi.create_datasource(uid=self.user['uid'], aid=self.agent['aid'], datasourcename=datasourcename2)
+        did2=datasource2['did']
+        date2=timeuuid.uuid1()
+        content='store_datasource_values content 23 32 554 and \nnew lines\ttabs\tetc..'
+        self.assertTrue(datasourceapi.store_datasource_data(did=did2, date=date2, content=content))
+        self.assertTrue(datasourceapi.generate_datasource_map(did=did2, date=date2))
+        self.assertTrue(datasourceapi.update_datasource_supplies(did=did2, supplies=['datapoint_uri2','datapoint_uri3']))
+        self.assertTrue(cassapidatasource.insert_datapoint_classifier_dtree(did2, datapoint3['dtree'].serialize()))
+        # datapoint_uri should be detected and monitored
+        result = api.monitor_identified_uris(did=did2, date=date2)
+        self.assertEqual(result['pending'],[])
+        self.assertEqual(result['monitoring_allowed'],True)
+        self.assertEqual(result['monitoring_bounded'],True)
+        self.assertEqual(result['more_than_once'],[])
+        self.assertEqual(len(result['monitored']),2)
+        self.assertEqual(result['monitored'][0]['uri'], '.'.join((datasourcename2,'datapoint_uri2')))
+        self.assertEqual(result['monitored'][0]['did'], did2)
+        self.assertEqual(result['monitored'][0]['aid'], datasource2['aid'])
+        self.assertEqual(result['monitored'][0]['uid'], datasource2['uid'])
+        self.assertEqual(result['monitored'][0]['previously_existed'], False)
+        self.assertEqual(result['monitored'][1]['uri'], '.'.join((datasourcename2,'datapoint_uri3')))
+        self.assertEqual(result['monitored'][1]['did'], did2)
+        self.assertEqual(result['monitored'][1]['aid'], datasource2['aid'])
+        self.assertEqual(result['monitored'][1]['uid'], datasource2['uid'])
+        self.assertEqual(result['monitored'][1]['previously_existed'], False)
+        self.assertEqual(sorted(result['dtree_info']['classified']),sorted(['datapoint_uri2','datapoint_uri3']))
+        self.assertEqual(result['dtree_info']['conflicts'],[])
+        self.assertEqual(result['dtree_info']['no_positive_tr_set'],[])
+        self.assertNotEqual(result['dtree_info']['dtree'],None)
+
+    def test_monitor_identified_uris_monitoring_allowed_some_predefined_supply_monitor_already_existed_as_user_datapoints(self):
+        ''' monitor_identified_uris should identify only allowed and pending uris '''
+        datasourcename='test_monitor_identified_uris_monitoring_allowed_some_predefined_supply_monitor_already_existed_as_user_datapoints'
+        datasource=datasourceapi.create_datasource(uid=self.user['uid'], aid=self.agent['aid'], datasourcename=datasourcename)
+        did=datasource['did']
+        date=timeuuid.uuid1()
+        content='store_datasource_values content 23 32 554 and \nnew lines\ttabs\tetc..'
+        self.assertTrue(datasourceapi.store_datasource_data(did=did, date=date, content=content))
+        self.assertTrue(datasourceapi.generate_datasource_map(did=did, date=date))
+        self.assertTrue(datasourceapi.update_datasource_supplies(did=did, supplies=['datapoint_uri']))
+        #first var should be a position 32 and length 2
+        position=32
+        length=2
+        datapointname='datapoint_uri1'
+        datapoint=api.monitor_new_datapoint(did=did, date=date, position=position, length=length, datapointname=datapointname)
+        position=35
+        length=2
+        datapointname2='datapoint_uri2'
+        datapoint2=api.monitor_new_datapoint(did=did, date=date, position=position, length=length, datapointname=datapointname2)
+        position=38
+        length=3
+        datapointname3='datapoint_uri3'
+        datapoint3=api.monitor_new_datapoint(did=did, date=date, position=position, length=length, datapointname=datapointname3)
+        store_result = api.store_datasource_values(did=did, date=date)
+        datasourcename2= 'test_monitor_identified_uris_monitoring_allowed_some_predefined_supply_monitor_already_existed_as_user_datapoints_2'
+        datasource2=datasourceapi.create_datasource(uid=self.user['uid'], aid=self.agent['aid'], datasourcename=datasourcename2)
+        did2=datasource2['did']
+        date2=timeuuid.uuid1()
+        content='store_datasource_values content 23 32 554 and \nnew lines\ttabs\tetc..'
+        self.assertTrue(datasourceapi.store_datasource_data(did=did2, date=date2, content=content))
+        self.assertTrue(datasourceapi.generate_datasource_map(did=did2, date=date2))
+        self.assertTrue(datasourceapi.update_datasource_supplies(did=did2, supplies=['datapoint_uri2','datapoint_uri3']))
+        self.assertTrue(cassapidatasource.insert_datapoint_classifier_dtree(did2, datapoint3['dtree'].serialize()))
+        # create user datapoints, not associated to any datasource
+        dp2 = api.create_user_datapoint(uid=datasource2['uid'], datapoint_uri='.'.join((datasourcename2,datapointname2)))
+        dp3 = api.create_user_datapoint(uid=datasource2['uid'], datapoint_uri='.'.join((datasourcename2,datapointname3)))
+        # datapoint_uri should be detected and monitored
+        result = api.monitor_identified_uris(did=did2, date=date2)
+        self.assertEqual(result['pending'],[])
+        self.assertEqual(result['monitoring_allowed'],True)
+        self.assertEqual(result['monitoring_bounded'],True)
+        self.assertEqual(result['more_than_once'],[])
+        self.assertEqual(len(result['monitored']),2)
+        self.assertEqual(result['monitored'][0]['uri'], '.'.join((datasourcename2,'datapoint_uri2')))
+        self.assertEqual(result['monitored'][0]['did'], did2)
+        self.assertEqual(result['monitored'][0]['aid'], datasource2['aid'])
+        self.assertEqual(result['monitored'][0]['uid'], datasource2['uid'])
+        self.assertEqual(result['monitored'][0]['previously_existed'], True)
+        self.assertEqual(result['monitored'][1]['uri'], '.'.join((datasourcename2,'datapoint_uri3')))
+        self.assertEqual(result['monitored'][1]['did'], did2)
+        self.assertEqual(result['monitored'][1]['aid'], datasource2['aid'])
+        self.assertEqual(result['monitored'][1]['uid'], datasource2['uid'])
+        self.assertEqual(result['monitored'][1]['previously_existed'], True)
+        self.assertEqual(sorted(result['dtree_info']['classified']),sorted(['datapoint_uri2','datapoint_uri3']))
+        self.assertEqual(result['dtree_info']['conflicts'],[])
+        self.assertEqual(result['dtree_info']['no_positive_tr_set'],[])
+        self.assertNotEqual(result['dtree_info']['dtree'],None)
+
+    def test_monitor_identified_uris_monitoring_allowed_some_predefined_supply_monitor_already_existed_as_user_datapoints_date_null(self):
+        ''' monitor_identified_uris should identify only allowed and pending uris '''
+        datasourcename='test_monitor_identified_uris_monitoring_allowed_some_predefined_supply_monitor_already_existed_as_user_datapoints_date_null'
+        datasource=datasourceapi.create_datasource(uid=self.user['uid'], aid=self.agent['aid'], datasourcename=datasourcename)
+        did=datasource['did']
+        date=timeuuid.uuid1()
+        content='store_datasource_values content 23 32 554 and \nnew lines\ttabs\tetc..'
+        self.assertTrue(datasourceapi.store_datasource_data(did=did, date=date, content=content))
+        self.assertTrue(datasourceapi.generate_datasource_map(did=did, date=date))
+        self.assertTrue(datasourceapi.update_datasource_supplies(did=did, supplies=['datapoint_uri']))
+        #first var should be a position 32 and length 2
+        position=32
+        length=2
+        datapointname='datapoint_uri1'
+        datapoint=api.monitor_new_datapoint(did=did, date=date, position=position, length=length, datapointname=datapointname)
+        position=35
+        length=2
+        datapointname2='datapoint_uri2'
+        datapoint2=api.monitor_new_datapoint(did=did, date=date, position=position, length=length, datapointname=datapointname2)
+        position=38
+        length=3
+        datapointname3='datapoint_uri3'
+        datapoint3=api.monitor_new_datapoint(did=did, date=date, position=position, length=length, datapointname=datapointname3)
+        store_result = api.store_datasource_values(did=did, date=date)
+        datasourcename2= 'test_monitor_identified_uris_monitoring_allowed_some_predefined_supply_monitor_already_existed_as_user_datapoints_date_null_2'
+        datasource2=datasourceapi.create_datasource(uid=self.user['uid'], aid=self.agent['aid'], datasourcename=datasourcename2)
+        did2=datasource2['did']
+        date2=timeuuid.uuid1()
+        content='store_datasource_values content 23 32 554 and \nnew lines\ttabs\tetc..'
+        self.assertTrue(datasourceapi.store_datasource_data(did=did2, date=date2, content=content))
+        self.assertTrue(datasourceapi.generate_datasource_map(did=did2, date=date2))
+        self.assertTrue(datasourceapi.update_datasource_supplies(did=did2, supplies=['datapoint_uri2','datapoint_uri3']))
+        self.assertTrue(cassapidatasource.insert_datapoint_classifier_dtree(did2, datapoint3['dtree'].serialize()))
+        # create user datapoints, not associated to any datasource
+        dp2 = api.create_user_datapoint(uid=datasource2['uid'], datapoint_uri='.'.join((datasourcename2,datapointname2)))
+        dp3 = api.create_user_datapoint(uid=datasource2['uid'], datapoint_uri='.'.join((datasourcename2,datapointname3)))
+        # datapoint_uri should be detected and monitored
+        result = api.monitor_identified_uris(did=did2) # date will be selected from datasource stats
+        self.assertEqual(result['pending'],[])
+        self.assertEqual(result['monitoring_allowed'],True)
+        self.assertEqual(result['monitoring_bounded'],True)
+        self.assertEqual(result['more_than_once'],[])
+        self.assertEqual(len(result['monitored']),2)
+        self.assertEqual(result['monitored'][0]['uri'], '.'.join((datasourcename2,'datapoint_uri2')))
+        self.assertEqual(result['monitored'][0]['did'], did2)
+        self.assertEqual(result['monitored'][0]['aid'], datasource2['aid'])
+        self.assertEqual(result['monitored'][0]['uid'], datasource2['uid'])
+        self.assertEqual(result['monitored'][0]['previously_existed'], True)
+        self.assertEqual(result['monitored'][1]['uri'], '.'.join((datasourcename2,'datapoint_uri3')))
+        self.assertEqual(result['monitored'][1]['did'], did2)
+        self.assertEqual(result['monitored'][1]['aid'], datasource2['aid'])
+        self.assertEqual(result['monitored'][1]['uid'], datasource2['uid'])
+        self.assertEqual(result['monitored'][1]['previously_existed'], True)
+        self.assertEqual(sorted(result['dtree_info']['classified']),sorted(['datapoint_uri2','datapoint_uri3']))
+        self.assertEqual(result['dtree_info']['conflicts'],[])
+        self.assertEqual(result['dtree_info']['no_positive_tr_set'],[])
+        self.assertNotEqual(result['dtree_info']['dtree'],None)
+
+    def test_monitor_identified_uris_monitoring_allowed_limit_executions_based_on_supplies_insert_rate(self):
+        ''' monitor_identified_uris should identify pending supplies '''
+        datasourcename='test_monitor_identified_uris_monitoring_allowed_limit_executions_based_on_supplies_insert_rat'
+        datasource=datasourceapi.create_datasource(uid=self.user['uid'], aid=self.agent['aid'], datasourcename=datasourcename)
+        did=datasource['did']
+        date=timeuuid.uuid1()
+        content='store_datasource_values content 23 32 554 and \nnew lines\ttabs\tetc..'
+        self.assertTrue(datasourceapi.store_datasource_data(did=did, date=date, content=content))
+        self.assertTrue(datasourceapi.generate_datasource_map(did=did, date=date))
+        self.assertTrue(datasourceapi.update_datasource_supplies(did=did, supplies=['datapoint_uri']))
+        #first var should be a position 32 and length 2
+        position=32
+        length=2
+        datapointname='datapoint_uri1'
+        datapoint=api.monitor_new_datapoint(did=did, date=date, position=position, length=length, datapointname=datapointname)
+        position=35
+        length=2
+        datapointname2='datapoint_uri2'
+        datapoint2=api.monitor_new_datapoint(did=did, date=date, position=position, length=length, datapointname=datapointname2)
+        position=38
+        length=3
+        datapointname3='datapoint_uri3'
+        datapoint3=api.monitor_new_datapoint(did=did, date=date, position=position, length=length, datapointname=datapointname3)
+        store_result = api.store_datasource_values(did=did, date=date)
+        datasourcename2= 'test_monitor_identified_uris_monitoring_allowed_limit_executions_based_on_supplies_insert_rate_2'
+        datasource2=datasourceapi.create_datasource(uid=self.user['uid'], aid=self.agent['aid'], datasourcename=datasourcename2)
+        did2=datasource2['did']
+        date2=timeuuid.uuid1()
+        content='store_datasource_values content 23 32 554 and \nnew lines\ttabs\tetc..'
+        self.assertTrue(datasourceapi.store_datasource_data(did=did2, date=date2, content=content))
+        self.assertTrue(datasourceapi.generate_datasource_map(did=did2, date=date2))
+        self.assertTrue(datasourceapi.update_datasource_supplies(did=did2, supplies=['datapoint_uri2']))
+        self.assertTrue(cassapidatasource.insert_datapoint_classifier_dtree(did2, datapoint3['dtree'].serialize()))
+        # datapoint_uri should be detected and monitored
+        result = api.monitor_identified_uris(did=did2) # date will be selected from datasource stats
+        self.assertEqual(result['pending'],[])
+        self.assertEqual(result['monitoring_allowed'],True)
+        self.assertEqual(result['monitoring_bounded'],True)
+        self.assertEqual(result['more_than_once'],[])
+        self.assertEqual(len(result['monitored']),1)
+        self.assertEqual(result['monitored'][0]['uri'], '.'.join((datasourcename2,'datapoint_uri2')))
+        self.assertEqual(result['monitored'][0]['did'], did2)
+        self.assertEqual(result['monitored'][0]['aid'], datasource2['aid'])
+        self.assertEqual(result['monitored'][0]['uid'], datasource2['uid'])
+        self.assertEqual(result['monitored'][0]['previously_existed'], False)
+        self.assertEqual(sorted(result['dtree_info']['classified']),sorted(['datapoint_uri2']))
+        self.assertEqual(result['dtree_info']['conflicts'],[])
+        self.assertEqual(result['dtree_info']['no_positive_tr_set'],[])
+        self.assertNotEqual(result['dtree_info']['dtree'],None)
+        # now we insert supplies
+        self.assertTrue(datasourceapi.update_datasource_supplies(did=did2, supplies=['datapoint_uri2','datapoint_uri3']))
+        # execution should be discarded because multiple supplies updates have been done very recently
+        result = api.monitor_identified_uris(did=did2)
+        self.assertEqual(result['pending'],[])
+        self.assertEqual(result['monitoring_allowed'],False)
+        self.assertEqual(result['monitoring_bounded'],False)
+        self.assertEqual(result['more_than_once'],[])
+        self.assertEqual(len(result['monitored']),0)
+        self.assertEqual(result['creation_failed'],[])
+        self.assertEqual(result['dtree_info'],None)
+
+    def test_select_dtree_for_datasource_failure_invalid_did(self):
+        ''' select_dtree_for_datasource should fail if did is invalid '''
+        dids=['asdfasd',234234,234234.234,{'a':'dict'},None,['a','list'],{'set'},('tupl','e'),timeuuid.uuid1(),uuid.uuid4().hex]
+        for did in dids:
+            with self.assertRaises(exceptions.BadParametersException) as cm:
+                api.select_dtree_for_datasource(did=did)
+            self.assertEqual(cm.exception.error, Errors.E_GPA_SDTDS_IDID)
+
+    def test_select_dtree_for_datasource_failure_non_existent_did(self):
+        ''' select_dtree_for_datasource should fail if did does not exist '''
+        did = uuid.uuid4()
+        with self.assertRaises(exceptions.DatasourceNotFoundException) as cm:
+            api.select_dtree_for_datasource(did=did)
+        self.assertEqual(cm.exception.error, Errors.E_GPA_SDTDS_DSNF)
+
+    def test_select_dtree_for_datasource_success_datasource_has_no_data(self):
+        ''' select_dtree_for_datasource should do nothing if ds has no data '''
+        uid=self.user['uid']
+        aid=self.agent['aid']
+        datasourcename='test_select_dtree_for_datasource_success_datasource_has_no_data'
+        datasource=datasourceapi.create_datasource(uid=uid, aid=aid, datasourcename=datasourcename)
+        self.assertIsInstance(datasource, dict)
+        self.assertEqual(datasource['aid'],aid)
+        self.assertEqual(datasource['uid'],uid)
+        self.assertEqual(datasource['datasourcename'],datasourcename)
+        result = api.select_dtree_for_datasource(datasource['did'])
+        self.assertEqual(result['features'],[])
+        self.assertEqual(result['updated'],False)
+        self.assertEqual(result['dtree'],None)
+
+    def test_select_dtree_for_datasource_success_datasource_has_one_sample(self):
+        ''' select_dtree_for_datasource should try to find a matching ds if this ds has data '''
+        username='test_select_dtree_for_datasource_success_datasource_has_one_sample'
+        password='password'
+        email=username+'@komlog.org'
+        user=userapi.create_user(username=username, password=password, email=email)
+        agentname='test_select_dtree_for_datasource_success_datasource_has_one_sample'
+        pubkey=crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
+        version='Test Version'
+        agent=agentapi.create_agent(uid=user['uid'], agentname=agentname, pubkey=pubkey, version=version)
+        datasourcename='datasourcename'
+        datasource=datasourceapi.create_datasource(uid=user['uid'], aid=agent['aid'], datasourcename=datasourcename)
+        did=datasource['did']
+        date=timeuuid.uuid1()
+        content='thiscontentisnotanywhereIhope 25'
+        self.assertTrue(datasourceapi.store_datasource_data(did=did, date=date, content=content))
+        self.assertTrue(datasourceapi.generate_datasource_map(did=did, date=date))
+        result = api.select_dtree_for_datasource(did)
+        self.assertNotEqual(result['features'],[])
+        self.assertEqual(result['updated'],True)
+        self.assertEqual(result['dtree'],None)
+
+    def test_select_dtree_for_datasource_success_dont_exec_if_configured_interval_not_elapsed(self):
+        ''' select_dtree_for_datasource should not execute if the configured interval is not elapsed yet '''
+        username='test_select_dtree_for_datasource_success_dont_exec_if_configured_interval_not_elapsed'
+        password='password'
+        email=username+'@komlog.org'
+        user=userapi.create_user(username=username, password=password, email=email)
+        agentname='test_select_dtree_for_datasource_success_dont_exec_if_configured_interval_not_elapsed'
+        pubkey=crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
+        version='Test Version'
+        agent=agentapi.create_agent(uid=user['uid'], agentname=agentname, pubkey=pubkey, version=version)
+        datasourcename='datasourcename'
+        datasource=datasourceapi.create_datasource(uid=user['uid'], aid=agent['aid'], datasourcename=datasourcename)
+        did=datasource['did']
+        date=timeuuid.uuid1()
+        content='Wellthisisnotherethough 25'
+        self.assertTrue(datasourceapi.store_datasource_data(did=did, date=date, content=content))
+        self.assertTrue(datasourceapi.generate_datasource_map(did=did, date=date))
+        result = api.select_dtree_for_datasource(did)
+        self.assertNotEqual(result['features'],[])
+        self.assertEqual(result['updated'],True)
+        self.assertEqual(result['dtree'],None)
+        result2 = api.select_dtree_for_datasource(did)
+        self.assertEqual(result2['features'],result['features'])
+        self.assertEqual(result2['updated'],False)
+        self.assertEqual(result2['dtree'],None)
+
+    def test_select_dtree_for_datasource_success_dtree_identified(self):
+        ''' select_dtree_for_datasource should identify a matching dtree for the ds '''
+        datasourcename='test_select_dtree_for_datasource_success_dtree_identified'
+        datasource=datasourceapi.create_datasource(uid=self.user['uid'], aid=self.agent['aid'], datasourcename=datasourcename)
+        did=datasource['did']
+        datapointname='datapointname'
+        datapoint=api.create_datasource_datapoint(did=did,datapoint_uri=datapointname)
+        pid=datapoint['pid']
+        date=timeuuid.uuid1()
+        content='16 hours work no play makes Juan a dull boy, and 14 and 12 and 10 too'
+        self.assertTrue(datasourceapi.store_datasource_data(did=did, date=date, content=content))
+        self.assertTrue(datasourceapi.generate_datasource_map(did=did, date=date))
+        #first var should be a position 50 and length 2
+        position=0
+        length=2
+        mark_result=api.mark_positive_variable(pid=datapoint['pid'], date=date, position=position, length=length,dtree_update=False)
+        self.assertEqual(mark_result,{'updated':[],'pending':[did]})
+        result = api.generate_decision_tree(did=did)
+        self.assertEqual(result['classified'],[datapointname])
+        self.assertIsNotNone(result['dtree'])
+        s_dtree = cassapidatasource.get_datapoint_classifier_dtree(did=did)
+        dtree = dtreeapi.load_dtree(s_dtree)
+        dshashes=cassapidatasource.get_datasource_hashes(did=did, fromdate=date, todate=date)
+        self.assertEqual(len(dshashes),1)
+        for dshash in dshashes:
+            text_hash=json.loads(dshash.content)
+            variables_atts=textmanvar.get_variables_atts(text_hash)
+            for var in variables_atts:
+                result = dtree.classify(var['atts'])
+                if var['text_pos']!=position:
+                    self.assertIsNone(result)
+                else:
+                    self.assertEqual(result,{datapointname:1})
+        # register ds features
+        result = datasourceapi.update_datasource_features(did=did)
+        # now, create a new user, agent, datasource and try to match the dtree
+        username='all_work_no_play_makes_juan_a_dull_boy'
+        password='password'
+        email=username+'@komlog.org'
+        user=userapi.create_user(username=username, password=password, email=email)
+        agentname='test_select_dtree_for_datasource_success_dont_exec_if_configured_interval_not_elapsed'
+        pubkey=crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
+        version='Test Version'
+        agent=agentapi.create_agent(uid=user['uid'], agentname=agentname, pubkey=pubkey, version=version)
+        datasourcename2='datasourcename'
+        datasource2=datasourceapi.create_datasource(uid=user['uid'], aid=agent['aid'], datasourcename=datasourcename2)
+        did2=datasource2['did']
+        date=timeuuid.uuid1()
+        content='16 hours work no play makes Juan a dull boy, deal with it'
+        self.assertTrue(datasourceapi.store_datasource_data(did=did2, date=date, content=content))
+        self.assertTrue(datasourceapi.generate_datasource_map(did=did2, date=date))
+        result2 = api.select_dtree_for_datasource(did2)
+        self.assertNotEqual(result2['features'],[])
+        self.assertEqual(result2['updated'],True)
+        self.assertNotEqual(result2['dtree'],None)
+        dshashes=cassapidatasource.get_datasource_hashes(did=did2, fromdate=date, todate=date)
+        self.assertEqual(len(dshashes),1)
+        for dshash in dshashes:
+            text_hash=json.loads(dshash.content)
+            variables_atts=textmanvar.get_variables_atts(text_hash)
+            for var in variables_atts:
+                result = dtree.classify(var['atts'])
+                if var['text_pos']!=position:
+                    self.assertIsNone(result)
+                else:
+                    self.assertEqual(result,{datapointname:1})
 

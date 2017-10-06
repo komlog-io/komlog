@@ -28,6 +28,7 @@ from komlog.komlibs.general.validation import arguments as args
 from komlog.komlibs.general.time import timeuuid
 from komlog.komlibs.textman.api import variables as textmanvar
 from komlog.komlibs.textman.api import summary as textsumm
+from komlog.komlibs.textman.api import features as textfeat
 from komlog.komlibs.graph.api import uri as graphuri
 
 def create_datasource(uid,aid,datasourcename):
@@ -301,20 +302,41 @@ def update_datasource_supplies(did, supplies):
     else:
         return False
 
-def classify_sample(did, date):
+def update_datasource_features(did):
     if not args.is_valid_uuid(did):
-        raise exceptions.BadParametersException(error=Errors.E_GDA_CLSMP_IDID)
-    if not args.is_valid_date(date):
-        raise exceptions.BadParametersException(error=Errors.E_GDA_CLSMP_IDT)
-    dsdata=cassapidatasource.get_datasource_data_at(did=did, date=item.date)
-    if dsdata == None:
-        raise exceptions.DatasourceDataNotFoundException(error=Errors.E_GDA_CLSMP_DSDNF)
-    features = textsumm.get_content_features([dsdata], max_features=25)
-    ds_features = cassapidatasource.get_datasource_features(did=did)
-    response = {'new_ds_features':False}
-    for feature in features:
-        if not feature in ds_features.features:
-            response['new_ds_features']=True
-            break
-    return response
+        raise exceptions.BadParametersException(error=Errors.E_GDA_UDDSF_IDID)
+    result = {'features':[],'delete_prev':False,'insert_new':False,'insert_date':None,'did':did}
+    # delete current features
+    datapoints = cassapidatapoint.get_datapoints(did=did)
+    content_dates = set()
+    for dp in datapoints:
+        positives = cassapidatapoint.get_datapoint_dtree_positives(pid=dp.pid)
+        for pos in positives:
+            content_dates.add(pos.date)
+        # by now, we don't include negatives
+    samples = []
+    for date in content_dates:
+        dshash = cassapidatasource.get_datasource_hash(did=did, date=date)
+        if dshash:
+            content = json.loads(dshash.content)
+            items = [el['hash'] for el in content['elements'] if not 'type' in el or el['type'] != 'var']
+            samples.append(items)
+    old_features = cassapidatasource.get_datasource_features(did=did)
+    # generate and insert ds features
+    if samples:
+        now = timeuuid.uuid1()
+        ds_vector = textfeat.get_document_vector(samples)
+        result['features'] = ds_vector
+        info = [{'feature':key, 'weight':value} for key,value in ds_vector.items()]
+        features = set(ds_vector.keys())
+        if old_features:
+            old_features = set(old_features.features)
+            rm_features = old_features - features
+            if rm_features and cassapidatasource.delete_datasource_by_features(did, rm_features):
+                result['delete_prev'] = True
+        if cassapidatasource.insert_datasource_features(did=did, date=now, features=list(features)) and \
+                cassapidatasource.insert_datasource_by_features(did=did, info=info):
+            result['insert_new'] = True
+            result['insert_date'] = now
+    return result
 

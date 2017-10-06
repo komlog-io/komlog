@@ -815,7 +815,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertEqual(resp.ws_messages[0].irt, uuid.UUID(msg['seq']))
         self.assertNotEqual(resp.imc_messages['unrouted'],[])
         self.assertEqual(resp.imc_messages['routed'],{})
-        self.assertTrue(isinstance(resp.imc_messages['unrouted'][0], messages.IdentifyNewDatapointsMessage))
+        self.assertTrue(isinstance(resp.imc_messages['unrouted'][0], messages.MonitorIdentifiedUrisMessage))
         self.assertEqual(resp.imc_messages['unrouted'][0].did, ds['did'])
 
     def test__process_send_ds_info_success_msg_supplies_some_uris_ds_has_the_same_uris_already(self):
@@ -855,7 +855,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertEqual(resp.ws_messages[0].irt, uuid.UUID(msg['seq']))
         self.assertNotEqual(resp.imc_messages['unrouted'],[])
         self.assertEqual(resp.imc_messages['routed'],{})
-        self.assertTrue(isinstance(resp.imc_messages['unrouted'][0], messages.IdentifyNewDatapointsMessage))
+        self.assertTrue(isinstance(resp.imc_messages['unrouted'][0], messages.MonitorIdentifiedUrisMessage))
         self.assertEqual(resp.imc_messages['unrouted'][0].did, ds['did'])
         msg2={'v':1,'action':Messages.SEND_DS_INFO.value,'seq':timeuuid.TimeUUID().hex, 'irt':None, 'payload':{'uri':'system.ds','supplies':['uri.1','uri.2','uri.3']}}
         resp=message._process_send_ds_info(passport=psp, message=msg2)
@@ -911,7 +911,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertEqual(resp.ws_messages[0].irt, uuid.UUID(msg['seq']))
         self.assertNotEqual(resp.imc_messages['unrouted'],[])
         self.assertEqual(resp.imc_messages['routed'],{})
-        self.assertTrue(isinstance(resp.imc_messages['unrouted'][0], messages.IdentifyNewDatapointsMessage))
+        self.assertTrue(isinstance(resp.imc_messages['unrouted'][0], messages.MonitorIdentifiedUrisMessage))
         self.assertEqual(resp.imc_messages['unrouted'][0].did, ds['did'])
         msg2={'v':1,'action':Messages.SEND_DS_INFO.value,'seq':timeuuid.TimeUUID().hex, 'irt':None, 'payload':{'uri':'system.ds','supplies':['uri.1']}}
         resp=message._process_send_ds_info(passport=psp, message=msg2)
@@ -929,7 +929,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertEqual(resp.ws_messages[0].irt, uuid.UUID(msg2['seq']))
         self.assertNotEqual(resp.imc_messages['unrouted'],[])
         self.assertEqual(resp.imc_messages['routed'],{})
-        self.assertTrue(isinstance(resp.imc_messages['unrouted'][0], messages.IdentifyNewDatapointsMessage))
+        self.assertTrue(isinstance(resp.imc_messages['unrouted'][0], messages.MonitorIdentifiedUrisMessage))
         self.assertEqual(resp.imc_messages['unrouted'][0].did, ds['did'])
         authorization.authorize_request = auth_req_bck
 
@@ -970,7 +970,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertEqual(resp.ws_messages[0].irt, uuid.UUID(msg['seq']))
         self.assertNotEqual(resp.imc_messages['unrouted'],[])
         self.assertEqual(resp.imc_messages['routed'],{})
-        self.assertTrue(isinstance(resp.imc_messages['unrouted'][0], messages.IdentifyNewDatapointsMessage))
+        self.assertTrue(isinstance(resp.imc_messages['unrouted'][0], messages.MonitorIdentifiedUrisMessage))
         self.assertEqual(resp.imc_messages['unrouted'][0].did, ds['did'])
         msg2={'v':1,'action':Messages.SEND_DS_INFO.value,'seq':timeuuid.TimeUUID().hex, 'irt':None, 'payload':{'uri':'system.ds','supplies':None}}
         resp=message._process_send_ds_info(passport=psp, message=msg2)

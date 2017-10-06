@@ -29,8 +29,6 @@ class Messages(Enum):
     GDTREE_MESSAGE                          = 'GDTREE'
     NEG_VAR_MESSAGE                         = 'NEGVAR'
     POS_VAR_MESSAGE                         = 'POSVAR'
-    IDENTIFY_NEW_DATAPOINTS_MESSAGE         = 'IDNEWDPS'
-    UPDATE_DATAPOINT_FEATURES_MESSAGE       = 'FEATDPUPD'
 
     # Datasource related
 
@@ -38,9 +36,9 @@ class Messages(Enum):
     FILL_DATASOURCE_MESSAGE                 = 'FILLDS'
     GENERATE_TEXT_SUMMARY_MESSAGE           = 'GENTEXTSUMMARY'
     URIS_UPDATED_MESSAGE                    = 'URISUPDT'
-    CLASSIFY_SAMPLE_MESSAGE                 = 'SMPCLASS'
-    UPDATE_DATASOURCE_FEATURES_MESSAGE      = 'FEATDSUPD'
-    IDENTIFY_SUPPLIES_MESSAGE               = 'IDSUPP'
+    ASSOCIATE_EXISTING_DTREE_MESSAGE        = 'AEDTREE'
+    UPDATE_DATASOURCE_FEATURES_MESSAGE      = 'DSFEATUPD'
+    MONITOR_IDENTIFIED_URIS_MESSAGE         = 'MONIDU'
 
     # Notifications related
 
@@ -1719,7 +1717,7 @@ class DataIntervalRequestMessage(IMCMessage):
                 raise exceptions.BadParametersException(error=Errors.E_IIMM_DIRM_IJSCOUNT)
             try:
                 irt=TimeUUID(s=json.loads(js_irt)) if json.loads(js_irt) != None else None
-            except (TypeError, ValueError,json.JSONDecodeError):
+            except (AttributeError, TypeError, ValueError,json.JSONDecodeError):
                 raise exceptions.BadParametersException(error=Errors.E_IIMM_DIRM_IJSIRT)
             sid = uuid.UUID(h_sid)
             ii = uuid.UUID(h_ii)
@@ -1730,8 +1728,9 @@ class DataIntervalRequestMessage(IMCMessage):
         uri = {'uri':self._uri['uri'],'type':self._uri['type'],'id':self._uri['id'].hex}
         return '|'.join((self._type_.value, self._sid.hex, self._ii.hex, self._ie.hex, json.dumps(uri),json.dumps(self._count),json.dumps(self._irt.hex if self._irt != None else None)))
 
-class IdentifyNewDatapointsMessage(IMCMessage):
-    _type_ = Messages.IDENTIFY_NEW_DATAPOINTS_MESSAGE
+
+class AssociateExistingDTreeMessage(IMCMessage):
+    _type_ = Messages.ASSOCIATE_EXISTING_DTREE_MESSAGE
 
     def __init__(self, did):
         self.did = did
@@ -1745,63 +1744,26 @@ class IdentifyNewDatapointsMessage(IMCMessage):
         if args.is_valid_uuid(did):
             self._did = did
         else:
-            raise exceptions.BadParametersException(error=Errors.E_IIMM_IDNEWDPS_IDID)
+            raise exceptions.BadParametersException(error=Errors.E_IIMM_AEDTREE_IDID)
 
     @classmethod
     def load_from_serialization(cls, msg):
         try:
             m_type, h_did = msg.split('|')
         except ValueError:
-            raise exceptions.BadParametersException(error=Errors.E_IIMM_IDNEWDPS_ELFS)
+            raise exceptions.BadParametersException(error=Errors.E_IIMM_AEDTREE_ELFS)
         except AttributeError:
-            raise exceptions.BadParametersException(error=Errors.E_IIMM_IDNEWDPS_MINS)
+            raise exceptions.BadParametersException(error=Errors.E_IIMM_AEDTREE_MINS)
         else:
             if not m_type == cls._type_.value:
-                raise exceptions.BadParametersException(error=Errors.E_IIMM_IDNEWDPS_IST)
+                raise exceptions.BadParametersException(error=Errors.E_IIMM_AEDTREE_IST)
             if not args.is_valid_hex_uuid(h_did):
-                raise exceptions.BadParametersException(error=Errors.E_IIMM_IDNEWDPS_IHDID)
+                raise exceptions.BadParametersException(error=Errors.E_IIMM_AEDTREE_IHDID)
             did = uuid.UUID(h_did)
             return cls(did=did)
 
     def to_serialization(self):
         return '|'.join((self._type_.value, self._did.hex))
-
-
-class UpdateDatapointFeaturesMessage(IMCMessage):
-    _type_ = Messages.UPDATE_DATAPOINT_FEATURES_MESSAGE
-
-    def __init__(self, pid):
-        self.pid = pid
-
-    @property
-    def pid(self):
-        return self._pid
-
-    @pid.setter
-    def pid(self, pid):
-        if args.is_valid_uuid(pid):
-            self._pid = pid
-        else:
-            raise exceptions.BadParametersException(error=Errors.E_IIMM_FEATDPUPD_IPID)
-
-    @classmethod
-    def load_from_serialization(cls, msg):
-        try:
-            m_type, h_pid = msg.split('|')
-        except ValueError:
-            raise exceptions.BadParametersException(error=Errors.E_IIMM_FEATDPUPD_ELFS)
-        except AttributeError:
-            raise exceptions.BadParametersException(error=Errors.E_IIMM_FEATDPUPD_MINS)
-        else:
-            if not m_type == cls._type_.value:
-                raise exceptions.BadParametersException(error=Errors.E_IIMM_FEATDPUPD_IST)
-            if not args.is_valid_hex_uuid(h_pid):
-                raise exceptions.BadParametersException(error=Errors.E_IIMM_FEATDPUPD_IHPID)
-            pid = uuid.UUID(h_pid)
-            return cls(pid=pid)
-
-    def to_serialization(self):
-        return '|'.join((self._type_.value, self._pid.hex))
 
 
 class UpdateDatasourceFeaturesMessage(IMCMessage):
@@ -1819,21 +1781,21 @@ class UpdateDatasourceFeaturesMessage(IMCMessage):
         if args.is_valid_uuid(did):
             self._did = did
         else:
-            raise exceptions.BadParametersException(error=Errors.E_IIMM_FEATDSUPD_IDID)
+            raise exceptions.BadParametersException(error=Errors.E_IIMM_DSFEATUPD_IDID)
 
     @classmethod
     def load_from_serialization(cls, msg):
         try:
             m_type, h_did = msg.split('|')
         except ValueError:
-            raise exceptions.BadParametersException(error=Errors.E_IIMM_FEATDSUPD_ELFS)
+            raise exceptions.BadParametersException(error=Errors.E_IIMM_DSFEATUPD_ELFS)
         except AttributeError:
-            raise exceptions.BadParametersException(error=Errors.E_IIMM_FEATDSUPD_MINS)
+            raise exceptions.BadParametersException(error=Errors.E_IIMM_DSFEATUPD_MINS)
         else:
             if not m_type == cls._type_.value:
-                raise exceptions.BadParametersException(error=Errors.E_IIMM_FEATDSUPD_IST)
+                raise exceptions.BadParametersException(error=Errors.E_IIMM_DSFEATUPD_IST)
             if not args.is_valid_hex_uuid(h_did):
-                raise exceptions.BadParametersException(error=Errors.E_IIMM_FEATDSUPD_IHDID)
+                raise exceptions.BadParametersException(error=Errors.E_IIMM_DSFEATUPD_IHDID)
             did = uuid.UUID(h_did)
             return cls(did=did)
 
@@ -1841,47 +1803,10 @@ class UpdateDatasourceFeaturesMessage(IMCMessage):
         return '|'.join((self._type_.value, self._did.hex))
 
 
-class IdentifySuppliesMessage(IMCMessage):
-    _type_ = Messages.IDENTIFY_SUPPLIES_MESSAGE
+class MonitorIdentifiedUrisMessage(IMCMessage):
+    _type_ = Messages.MONITOR_IDENTIFIED_URIS_MESSAGE
 
-    def __init__(self, did):
-        self.did = did
-
-    @property
-    def did(self):
-        return self._did
-
-    @did.setter
-    def did(self, did):
-        if args.is_valid_uuid(did):
-            self._did = did
-        else:
-            raise exceptions.BadParametersException(error=Errors.E_IIMM_IDSUPP_IDID)
-
-    @classmethod
-    def load_from_serialization(cls, msg):
-        try:
-            m_type, h_did = msg.split('|')
-        except ValueError:
-            raise exceptions.BadParametersException(error=Errors.E_IIMM_IDSUPP_ELFS)
-        except AttributeError:
-            raise exceptions.BadParametersException(error=Errors.E_IIMM_IDSUPP_MINS)
-        else:
-            if not m_type == cls._type_.value:
-                raise exceptions.BadParametersException(error=Errors.E_IIMM_IDSUPP_IST)
-            if not args.is_valid_hex_uuid(h_did):
-                raise exceptions.BadParametersException(error=Errors.E_IIMM_IDSUPP_IHDID)
-            did = uuid.UUID(h_did)
-            return cls(did=did)
-
-    def to_serialization(self):
-        return '|'.join((self._type_.value, self._did.hex))
-
-
-class ClassifySampleMessage(IMCMessage):
-    _type_ = Messages.CLASSIFY_SAMPLE_MESSAGE
-
-    def __init__(self, did, date):
+    def __init__(self, did, date=None):
         self.did = did
         self.date = date
 
@@ -1894,7 +1819,7 @@ class ClassifySampleMessage(IMCMessage):
         if args.is_valid_uuid(did):
             self._did = did
         else:
-            raise exceptions.BadParametersException(error=Errors.E_IIMM_SMPCLASS_IDID)
+            raise exceptions.BadParametersException(error=Errors.E_IIMM_MONIDU_IDID)
 
     @property
     def date(self):
@@ -1902,31 +1827,31 @@ class ClassifySampleMessage(IMCMessage):
 
     @date.setter
     def date(self, date):
-        if args.is_valid_date(date):
+        if date == None or args.is_valid_date(date):
             self._date = date
         else:
-            raise exceptions.BadParametersException(error=Errors.E_IIMM_SMPCLASS_IDT)
+            raise exceptions.BadParametersException(error=Errors.E_IIMM_MONIDU_IDT)
 
     @classmethod
     def load_from_serialization(cls, msg):
         try:
-            m_type, h_did, h_date = msg.split('|')
+            m_type, h_did, js_date = msg.split('|')
         except ValueError:
-            raise exceptions.BadParametersException(error=Errors.E_IIMM_SMPCLASS_ELFS)
+            raise exceptions.BadParametersException(error=Errors.E_IIMM_MONIDU_ELFS)
         except AttributeError:
-            raise exceptions.BadParametersException(error=Errors.E_IIMM_SMPCLASS_MINS)
+            raise exceptions.BadParametersException(error=Errors.E_IIMM_MONIDU_MINS)
         else:
             if not m_type == cls._type_.value:
-                raise exceptions.BadParametersException(error=Errors.E_IIMM_SMPCLASS_IST)
+                raise exceptions.BadParametersException(error=Errors.E_IIMM_MONIDU_IST)
             if not args.is_valid_hex_uuid(h_did):
-                raise exceptions.BadParametersException(error=Errors.E_IIMM_SMPCLASS_IHDID)
-            if not args.is_valid_hex_date(h_date):
-                raise exceptions.BadParametersException(error=Errors.E_IIMM_SMPCLASS_IHDATE)
+                raise exceptions.BadParametersException(error=Errors.E_IIMM_MONIDU_IHDID)
+            try:
+                date=TimeUUID(s=json.loads(js_date)) if json.loads(js_date) != None else None
+            except (AttributeError, TypeError, ValueError,json.JSONDecodeError):
+                raise exceptions.BadParametersException(error=Errors.E_IIMM_MONIDU_IJSDATE)
             did = uuid.UUID(h_did)
-            date = uuid.UUID(h_date)
             return cls(did=did, date=date)
 
     def to_serialization(self):
-        return '|'.join((self._type_.value, self._did.hex, self._date.hex))
-
+        return '|'.join((self._type_.value, self._did.hex, json.dumps(self._date.hex if self._date != None else None)))
 

@@ -268,6 +268,8 @@ class Errors(Enum):
     E_GDA_GDSSUP_IDID   =   4700    #: get_datasource_supplies. invalid did
     E_GDA_GDSSUP_ICNT   =   4701    #: get_datasource_supplies. invalid count
 
+    E_GDA_UDDSF_IDID    =   4725    #: update_datasource_features. invalid did
+
 # gestaccount datapoint api
 
 
@@ -413,9 +415,13 @@ class Errors(Enum):
     E_GPA_GDPH_IPID     =   7150    #: get_datapoint_hooks. invalid pid
     E_GPA_GDPH_DPNF     =   7151    #: get_datapoint_hooks. datapoint not found
 
-    E_GPA_GDCS_IPID     =   7200    #: invalid pid
-    E_GPA_GDCS_DPNF     =   7201    #: datapoint not found
-    E_GPA_GDCS_DSNF     =   7202    #: datasource not found
+    E_GPA_MIU_IDID      =   7200    #: monitor_identified_uris. invalid did
+    E_GPA_MIU_IDATE     =   7201    #: monitor_identified_uris. invalid date
+    E_GPA_MIU_DSNF      =   7202    #: monitor_identified_uris. datasource not found
+    E_GPA_MIU_DTRNF     =   7203    #: monitor_identified_uris. dtree not found
+
+    E_GPA_SDTDS_IDID    =   7250    #: select_dtree_for_datasource. invalid did
+    E_GPA_SDTDS_DSNF    =   7251    #: select_dtree_for_datasource. datasource not found
 
 # gestaccount widget api
 

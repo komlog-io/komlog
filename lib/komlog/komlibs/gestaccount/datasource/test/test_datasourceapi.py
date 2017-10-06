@@ -602,3 +602,156 @@ class GestaccountDatasourceApiTest(unittest.TestCase):
         supplies = api.get_datasource_supplies(did, count)
         self.assertEqual(supplies, sorted(set(supplies1+supplies2)))
 
+    def test_update_datasource_features_failure_invalid_did(self):
+        ''' update_datasource_features should fail if did is invalid '''
+        dids=['asdfasd',234234,234234.234,{'a':'dict'},None,['a','list'],{'set'},('tupl','e'),timeuuid.uuid1(),uuid.uuid4().hex]
+        for did in dids:
+            with self.assertRaises(exceptions.BadParametersException) as cm:
+                api.update_datasource_features(did=did)
+            self.assertEqual(cm.exception.error, Errors.E_GDA_UDDSF_IDID)
+
+    def test_update_datasource_features_success_no_datapoint_to_update_features(self):
+        ''' update_datasource_features should not insert anything if no datapoint is found for it '''
+        did = uuid.uuid4()
+        result = api.update_datasource_features(did)
+        self.assertEqual(result['features'],[])
+        self.assertEqual(result['delete_prev'],False)
+        self.assertEqual(result['insert_new'],False)
+        self.assertEqual(result['insert_date'],None)
+        self.assertEqual(result['did'],did)
+
+    def test_update_datasource_features_success_one_datapoint_existed_no_previous_features(self):
+        ''' update_datasource_features should insert the new ds features '''
+        username='test_update_datasource_features_success_one_datapoint_existed_no_previous_features'
+        password='password'
+        email=username+'@komlog.org'
+        user=userapi.create_user(username=username, password=password, email=email)
+        agentname='test_update_datasource_features_success_one_datapoint_existed_no_previous_features'
+        pubkey=crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
+        version='Test Version'
+        agent=agentapi.create_agent(uid=user['uid'], agentname=agentname, pubkey=pubkey, version=version)
+        datasourcename='datasourcename'
+        datasource=api.create_datasource(uid=user['uid'], aid=agent['aid'], datasourcename=datasourcename)
+        did=datasource['did']
+        datapointname='datapointname'
+        datapoint=datapointapi.create_datasource_datapoint(did=did,datapoint_uri=datapointname)
+        date=timeuuid.uuid1()
+        content='datapointX: 15, datapointY: 25'
+        self.assertTrue(api.store_datasource_data(did=did, date=date, content=content))
+        self.assertTrue(api.generate_datasource_map(did=did, date=date))
+        #first var should be a position 45 and length 2
+        position=12
+        length=2
+        mark_result=datapointapi.mark_positive_variable(pid=datapoint['pid'], date=date, position=position, length=length)
+        self.assertEqual(mark_result['conflicts'], [])
+        self.assertEqual(mark_result['updated'], [did])
+        self.assertEqual(mark_result['pending'], [])
+        self.assertEqual(mark_result['classified'], [datapointname])
+        self.assertEqual(mark_result['no_positive_tr_set'], [])
+        self.assertIsNotNone(mark_result['dtree'])
+        # we have a datasource with a datapoint identified. Lets update the ds features
+        result = api.update_datasource_features(did)
+        self.assertNotEqual(result['features'],[])
+        self.assertEqual(result['delete_prev'],False)
+        self.assertEqual(result['insert_new'],True)
+        self.assertNotEqual(result['insert_date'],None)
+        self.assertEqual(result['did'],did)
+
+    def test_update_datasource_features_success_one_datapoint_existed_no_previous_features_run_twice(self):
+        ''' update_datasource_features should insert the new ds features '''
+        username='test_update_datasource_features_success_one_datapoint_existed_no_previous_features_run_twice'
+        password='password'
+        email=username+'@komlog.org'
+        user=userapi.create_user(username=username, password=password, email=email)
+        agentname='test_update_datasource_features_success_one_datapoint_existed_no_previous_features_run_twice'
+        pubkey=crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
+        version='Test Version'
+        agent=agentapi.create_agent(uid=user['uid'], agentname=agentname, pubkey=pubkey, version=version)
+        datasourcename='datasourcename'
+        datasource=api.create_datasource(uid=user['uid'], aid=agent['aid'], datasourcename=datasourcename)
+        did=datasource['did']
+        datapointname='datapointname'
+        datapoint=datapointapi.create_datasource_datapoint(did=did,datapoint_uri=datapointname)
+        date=timeuuid.uuid1()
+        content='datapointX: 15, datapointY: 25'
+        self.assertTrue(api.store_datasource_data(did=did, date=date, content=content))
+        self.assertTrue(api.generate_datasource_map(did=did, date=date))
+        #first var should be a position 45 and length 2
+        position=12
+        length=2
+        mark_result=datapointapi.mark_positive_variable(pid=datapoint['pid'], date=date, position=position, length=length)
+        self.assertEqual(mark_result['conflicts'], [])
+        self.assertEqual(mark_result['updated'], [did])
+        self.assertEqual(mark_result['pending'], [])
+        self.assertEqual(mark_result['classified'], [datapointname])
+        self.assertEqual(mark_result['no_positive_tr_set'], [])
+        self.assertIsNotNone(mark_result['dtree'])
+        # we have a datasource with a datapoint identified. Lets update the ds features
+        result = api.update_datasource_features(did)
+        self.assertNotEqual(result['features'],[])
+        self.assertEqual(result['delete_prev'],False)
+        self.assertEqual(result['insert_new'],True)
+        self.assertNotEqual(result['insert_date'],None)
+        self.assertEqual(result['did'],did)
+        # 2nd run
+        result2 = api.update_datasource_features(did)
+        self.assertEqual(result['features'],result2['features'])
+        self.assertEqual(result2['delete_prev'],False)
+        self.assertEqual(result2['insert_new'],True)
+        self.assertNotEqual(result2['insert_date'],None)
+        self.assertEqual(result2['did'],did)
+
+    def test_update_datasource_features_success_features_modified(self):
+        ''' update_datasource_features should insert the new ds features and delete old '''
+        username='test_update_datasource_features_success_features_modified'
+        password='password'
+        email=username+'@komlog.org'
+        user=userapi.create_user(username=username, password=password, email=email)
+        agentname='test_update_datasource_features_success_features_modified'
+        pubkey=crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
+        version='Test Version'
+        agent=agentapi.create_agent(uid=user['uid'], agentname=agentname, pubkey=pubkey, version=version)
+        datasourcename='datasourcename'
+        datasource=api.create_datasource(uid=user['uid'], aid=agent['aid'], datasourcename=datasourcename)
+        did=datasource['did']
+        datapointname='datapointname'
+        datapoint=datapointapi.create_datasource_datapoint(did=did,datapoint_uri=datapointname)
+        date=timeuuid.uuid1()
+        content='datapointX: 15, datapointY: 25'
+        self.assertTrue(api.store_datasource_data(did=did, date=date, content=content))
+        self.assertTrue(api.generate_datasource_map(did=did, date=date))
+        #first var should be a position 45 and length 2
+        position=12
+        length=2
+        mark_result=datapointapi.mark_positive_variable(pid=datapoint['pid'], date=date, position=position, length=length)
+        self.assertEqual(mark_result['conflicts'], [])
+        self.assertEqual(mark_result['updated'], [did])
+        self.assertEqual(mark_result['pending'], [])
+        self.assertEqual(mark_result['classified'], [datapointname])
+        self.assertEqual(mark_result['no_positive_tr_set'], [])
+        self.assertIsNotNone(mark_result['dtree'])
+        date=timeuuid.uuid1()
+        content='datapointW: 15, datapointZ: 25'
+        self.assertTrue(api.store_datasource_data(did=did, date=date, content=content))
+        self.assertTrue(api.generate_datasource_map(did=did, date=date))
+        #first var should be a position 45 and length 2
+        position=12
+        length=2
+        mark_result=datapointapi.mark_positive_variable(pid=datapoint['pid'], date=date, position=position, length=length)
+        # we have a datasource with a datapoint identified. Lets update the ds features
+        result = api.update_datasource_features(did)
+        self.assertNotEqual(result['features'],[])
+        self.assertEqual(result['delete_prev'],False)
+        self.assertEqual(result['insert_new'],True)
+        self.assertNotEqual(result['insert_date'],None)
+        self.assertEqual(result['did'],did)
+        # mark negative var, so that we can remove some features
+        mark_result=datapointapi.mark_negative_variable(pid=datapoint['pid'], date=date, position=position, length=length)
+        # 2nd run
+        result2 = api.update_datasource_features(did)
+        self.assertNotEqual(result2['features'],[])
+        self.assertEqual(result2['delete_prev'],True)
+        self.assertEqual(result2['insert_new'],True)
+        self.assertNotEqual(result2['insert_date'],None)
+        self.assertEqual(result2['did'],did)
+
