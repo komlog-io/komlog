@@ -18,7 +18,7 @@ from komlog.komlibs.interface.websocket.protocol.v1 import api as apiv1
 
 def process_message(passport, message):
     if not isinstance(passport, AgentPassport):
-        t=time.time()
+        t = time.time()
         error=Errors.E_IWSA_PM_IPSP
         log = {
             'func':'komlog.komlibs.interface.websocket.api.process_message',
@@ -39,8 +39,8 @@ def process_message(passport, message):
         and args.is_valid_int(message['v'])
         and args.is_valid_string(message['action'])
         and args.is_valid_message_sequence_string(message['seq'])):
-        t=time.time()
-        error=Errors.E_IWSA_PM_IVA
+        t = time.time()
+        error = Errors.E_IWSA_PM_IVA
         log = {
             'func':'komlog.komlibs.interface.websocket.api.process_message',
             'uid':passport.uid.hex,
@@ -60,8 +60,8 @@ def process_message(passport, message):
     if message['v']==1:
         return apiv1.process_message(passport, message)
     else:
-        t=time.time()
-        error=Errors.E_IWSA_PM_UPV
+        t = time.time()
+        error = Errors.E_IWSA_PM_UPV
         log = {
             'func':'komlog.komlibs.interface.websocket.api.process_message',
             'uid':passport.uid.hex,

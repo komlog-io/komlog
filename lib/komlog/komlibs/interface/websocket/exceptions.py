@@ -15,7 +15,7 @@ from komlog.komlibs.interface.websocket.model import response as modresp
 
 class WebSocketProtocolException(Exception):
     def __init__(self, error):
-        self.error=error
+        self.error = error
 
     def __str__(self):
         return str(self.__class__)
@@ -40,16 +40,16 @@ class OperationExecutionException(WebSocketProtocolException):
     def __init__(self, error):
         super().__init__(error=error)
 
-PROTOCOL_ERROR_STATUS_EXCEPTION_LIST=(
+PROTOCOL_ERROR_STATUS_EXCEPTION_LIST = (
     BadParametersException,
     MessageValidationException,
 )
 
-MESSAGE_EXECUTION_DENIED_STATUS_EXCEPTION_LIST=(
+MESSAGE_EXECUTION_DENIED_STATUS_EXCEPTION_LIST = (
     authexcept.AuthException,
 )
 
-MESSAGE_EXECUTION_ERROR_STATUS_EXCEPTION_LIST=(
+MESSAGE_EXECUTION_ERROR_STATUS_EXCEPTION_LIST = (
     gestexcept.BadParametersException,
     gestexcept.DatasourceUploadContentException,
     gestexcept.DatapointCreationException,
@@ -59,7 +59,7 @@ MESSAGE_EXECUTION_ERROR_STATUS_EXCEPTION_LIST=(
     ResponseValidationException,
 )
 
-RESOURCE_NOT_FOUND_STATUS_EXCEPTION_LIST=(
+RESOURCE_NOT_FOUND_STATUS_EXCEPTION_LIST = (
     gestexcept.UserNotFoundException,
     gestexcept.AgentNotFoundException,
     gestexcept.DatasourceNotFoundException,
@@ -71,10 +71,10 @@ SERVICE_UNAVAILABLE_STATUS_EXCEPTION_LIST = (
 
 class ExceptionHandler:
     def __init__(self, f):
-        self.f=f
+        self.f = f
 
     def __call__(self, *args, **kwargs):
-        init=time.time()
+        init = time.time()
         if 'passport' in kwargs and isinstance(kwargs['passport'],AgentPassport):
             uid = kwargs['passport'].uid.hex
             aid = kwargs['passport'].aid.hex
@@ -87,20 +87,21 @@ class ExceptionHandler:
             'func':'.'.join((self.f.__module__,self.f.__qualname__)),
             'uid':uid,
             'aid':uid,
-            'sid':sid,
-            'ts':init
+            'sid':sid
         }
         try:
-            resp=self.f(*args, **kwargs)
-            end=time.time()
-            log['error']=resp.error.name
-            log['duration']=end-init
+            resp = self.f(*args, **kwargs)
+            end = time.time()
+            log['ts'] = end
+            log['error'] = resp.error.name
+            log['duration'] = end-init
             logging.c_logger.info(json.dumps(log))
             return resp
         except PROTOCOL_ERROR_STATUS_EXCEPTION_LIST as e:
-            end=time.time()
-            log['error']=e.error.name
-            log['duration']=end-init
+            end = time.time()
+            log['ts'] = end
+            log['error'] = e.error.name
+            log['duration'] = end-init
             logging.c_logger.info(json.dumps(log))
             irt = TimeUUID(s=kwargs['message']['seq']) if 'message' in kwargs and 'seq' in kwargs['message'] and arguments.is_valid_message_sequence_string(kwargs['message']['seq']) else None
             v = kwargs['message']['v'] if 'message' in kwargs and 'v' in kwargs['message'] and arguments.is_valid_int(kwargs['message']['v']) else 0
@@ -109,9 +110,10 @@ class ExceptionHandler:
             result.add_ws_message(ws_res)
             return result
         except MESSAGE_EXECUTION_DENIED_STATUS_EXCEPTION_LIST as e:
-            end=time.time()
-            log['error']=e.error.name
-            log['duration']=end-init
+            end = time.time()
+            log['ts'] = end
+            log['error'] = e.error.name
+            log['duration'] = end-init
             logging.c_logger.info(json.dumps(log))
             irt = TimeUUID(s=kwargs['message']['seq']) if 'message' in kwargs and 'seq' in kwargs['message'] and arguments.is_valid_message_sequence_string(kwargs['message']['seq']) else None
             v = kwargs['message']['v'] if 'message' in kwargs and 'v' in kwargs['message'] and arguments.is_valid_int(kwargs['message']['v']) else 0
@@ -120,9 +122,10 @@ class ExceptionHandler:
             result.add_ws_message(ws_res)
             return result
         except RESOURCE_NOT_FOUND_STATUS_EXCEPTION_LIST as e:
-            end=time.time()
-            log['error']=e.error.name
-            log['duration']=end-init
+            end = time.time()
+            log['ts'] = end
+            log['error'] = e.error.name
+            log['duration'] = end-init
             logging.c_logger.info(json.dumps(log))
             irt = TimeUUID(s=kwargs['message']['seq']) if 'message' in kwargs and 'seq' in kwargs['message'] and arguments.is_valid_message_sequence_string(kwargs['message']['seq']) else None
             v = kwargs['message']['v'] if 'message' in kwargs and 'v' in kwargs['message'] and arguments.is_valid_int(kwargs['message']['v']) else 0
@@ -131,9 +134,10 @@ class ExceptionHandler:
             result.add_ws_message(ws_res)
             return result
         except MESSAGE_EXECUTION_ERROR_STATUS_EXCEPTION_LIST as e:
-            end=time.time()
-            log['error']=e.error.name
-            log['duration']=end-init
+            end = time.time()
+            log['ts'] = end
+            log['error'] = e.error.name
+            log['duration'] = end-init
             logging.c_logger.info(json.dumps(log))
             irt = TimeUUID(s=kwargs['message']['seq']) if 'message' in kwargs and 'seq' in kwargs['message'] and arguments.is_valid_message_sequence_string(kwargs['message']['seq']) else None
             v = kwargs['message']['v'] if 'message' in kwargs and 'v' in kwargs['message'] and arguments.is_valid_int(kwargs['message']['v']) else 0
@@ -142,9 +146,10 @@ class ExceptionHandler:
             result.add_ws_message(ws_res)
             return result
         except SERVICE_UNAVAILABLE_STATUS_EXCEPTION_LIST as e:
-            end=time.time()
-            log['error']=e.error.name
-            log['duration']=end-init
+            end = time.time()
+            log['ts'] = end
+            log['error'] = e.error.name
+            log['duration'] = end-init
             logging.c_logger.info(json.dumps(log))
             irt = TimeUUID(s=kwargs['message']['seq']) if 'message' in kwargs and 'seq' in kwargs['message'] and arguments.is_valid_message_sequence_string(kwargs['message']['seq']) else None
             v = kwargs['message']['v'] if 'message' in kwargs and 'v' in kwargs['message'] and arguments.is_valid_int(kwargs['message']['v']) else 0
@@ -154,13 +159,14 @@ class ExceptionHandler:
             return result
         except Exception as e:
             logging.logger.error('WEBSOCKET Response non treated Exception in: '+'.'.join((self.f.__module__,self.f.__qualname__)))
-            ex_info=traceback.format_exc().splitlines()
+            ex_info = traceback.format_exc().splitlines()
             for line in ex_info:
                 logging.logger.error(line)
-            error=getattr(e,'error',Errors.UNKNOWN)
-            end=time.time()
-            log['error']=error.name
-            log['duration']=end-init
+            error = getattr(e,'error',Errors.UNKNOWN)
+            end = time.time()
+            log['ts'] = end
+            log['error'] = error.name
+            log['duration'] = end-init
             logging.c_logger.info(json.dumps(log))
             irt = TimeUUID(s=kwargs['message']['seq']) if 'message' in kwargs and 'seq' in kwargs['message'] and arguments.is_valid_message_sequence_string(kwargs['message']['seq']) else None
             v = kwargs['message']['v'] if 'message' in kwargs and 'v' in kwargs['message'] and arguments.is_valid_int(kwargs['message']['v']) else 0

@@ -21,8 +21,8 @@ def process_message(passport, message):
     try:
         return _processing_funcs[message['action']](passport=passport, message=message)
     except KeyError:
-        t=time.time()
-        error=Errors.E_IWSPV1A_PM_IA
+        t = time.time()
+        error = Errors.E_IWSPV1A_PM_IA
         log = {
             'func':'komlog.komlibs.interface.websocket.protocol.v1.api.process_message',
             'uid':passport.uid.hex,
@@ -34,7 +34,7 @@ def process_message(passport, message):
         }
         logging.c_logger.info(json.dumps(log))
         irt = TimeUUID(s=message['seq'])
-        ws_res = GenericResponse(status=status.PROTOCOL_ERROR, error=error,reason='unsupported action', irt=irt, v=message['v'])
+        ws_res = GenericResponse(status=status.PROTOCOL_ERROR, error=error, reason='unsupported action', irt=irt, v=message['v'])
         result = WSocketIfaceResponse(status=status.PROTOCOL_ERROR, error=error)
         result.add_ws_message(ws_res)
         return result
