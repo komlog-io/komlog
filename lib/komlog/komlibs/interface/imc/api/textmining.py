@@ -75,6 +75,8 @@ def process_message_FILLDS(message):
             # ds has no associated dtree
             response.add_imc_message(messages.AssociateExistingDTreeMessage(did=message.did))
         elif result['dp_found']:
+            if result['non_dp_uris']:
+                response.add_imc_message(messages.MonitorIdentifiedUris(did=message.did, date=message.date))
             # dtree has identified some dps in this sample
             uris=[]
             for dp in result['dp_found']:

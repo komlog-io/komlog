@@ -806,7 +806,7 @@ def monitor_identified_uris(did, date=None):
         'monitoring_bounded':False,
         'more_than_once':[],
         'creation_failed':[],
-        'dtree_info':None,
+        'dtree':None,
         'sample_date':date,
     }
     # obtenemos los supplies, para determinar si el usuario quiere que monitoricemos alguna uri en especial o no
@@ -869,8 +869,7 @@ def monitor_identified_uris(did, date=None):
             except exceptions.GestaccountException as e:
                 response['creation_failed'].append({'uri':uri, 'error':e.error.value})
     if response['monitored']:
-        dtree = generate_decision_tree(did)
-        response['dtree_info'] = dtree
+        response['dtree'] = dtree
         store_datasource_values(did=did, date=date)
     return response
 

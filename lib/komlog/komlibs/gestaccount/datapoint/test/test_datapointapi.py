@@ -1885,7 +1885,7 @@ class GestaccountDatapointApiTest(unittest.TestCase):
         self.assertEqual(result['monitoring_allowed'],True)
         self.assertEqual(result['monitoring_bounded'],False)
         self.assertEqual(result['more_than_once'],[])
-        self.assertEqual(result['dtree_info'],None)
+        self.assertEqual(result['dtree'],None)
 
     def test_monitor_identified_uris_monitoring_not_allowed(self):
         ''' monitor_identified_uris should do nothing if user has forbidden monitoring '''
@@ -1910,7 +1910,7 @@ class GestaccountDatapointApiTest(unittest.TestCase):
         self.assertEqual(result['monitoring_allowed'],False)
         self.assertEqual(result['monitoring_bounded'],False)
         self.assertEqual(result['more_than_once'],[])
-        self.assertEqual(result['dtree_info'],None)
+        self.assertEqual(result['dtree'],None)
 
     def test_monitor_identified_uris_monitoring_allowed_supply_allowed_already_exists(self):
         ''' monitor_identified_uris should identify pending supplies '''
@@ -1935,7 +1935,7 @@ class GestaccountDatapointApiTest(unittest.TestCase):
         self.assertEqual(result['monitoring_allowed'],True)
         self.assertEqual(result['monitoring_bounded'],True)
         self.assertEqual(result['more_than_once'],[])
-        self.assertEqual(result['dtree_info'],None)
+        self.assertEqual(result['dtree'],None)
 
     def test_monitor_identified_uris_monitoring_allowed_supply_allowed_does_not_exist(self):
         ''' monitor_identified_uris should identify pending supplies '''
@@ -1974,10 +1974,7 @@ class GestaccountDatapointApiTest(unittest.TestCase):
         self.assertEqual(result['monitored'][0]['aid'], datasource2['aid'])
         self.assertEqual(result['monitored'][0]['uid'], datasource2['uid'])
         self.assertEqual(result['monitored'][0]['previously_existed'], False)
-        self.assertEqual(result['dtree_info']['classified'],['datapoint_uri'])
-        self.assertEqual(result['dtree_info']['conflicts'],[])
-        self.assertEqual(result['dtree_info']['no_positive_tr_set'],[])
-        self.assertNotEqual(result['dtree_info']['dtree'],None)
+        self.assertNotEqual(result['dtree'],None)
 
     def test_monitor_identified_uris_monitoring_allowed_no_predefined_supply_monitor_everything_it_finds(self):
         ''' monitor_identified_uris should identify every classified uri '''
@@ -2016,10 +2013,7 @@ class GestaccountDatapointApiTest(unittest.TestCase):
         self.assertEqual(result['monitored'][0]['aid'], datasource2['aid'])
         self.assertEqual(result['monitored'][0]['uid'], datasource2['uid'])
         self.assertEqual(result['monitored'][0]['previously_existed'], False)
-        self.assertEqual(result['dtree_info']['classified'],['datapoint_uri'])
-        self.assertEqual(result['dtree_info']['conflicts'],[])
-        self.assertEqual(result['dtree_info']['no_positive_tr_set'],[])
-        self.assertNotEqual(result['dtree_info']['dtree'],None)
+        self.assertNotEqual(result['dtree'],None)
 
     def test_monitor_identified_uris_monitoring_allowed_some_predefined_supply_monitor_allowed_only(self):
         ''' monitor_identified_uris should identify only allowed and pending uris '''
@@ -2071,10 +2065,7 @@ class GestaccountDatapointApiTest(unittest.TestCase):
         self.assertEqual(result['monitored'][1]['aid'], datasource2['aid'])
         self.assertEqual(result['monitored'][1]['uid'], datasource2['uid'])
         self.assertEqual(result['monitored'][1]['previously_existed'], False)
-        self.assertEqual(sorted(result['dtree_info']['classified']),sorted(['datapoint_uri2','datapoint_uri3']))
-        self.assertEqual(result['dtree_info']['conflicts'],[])
-        self.assertEqual(result['dtree_info']['no_positive_tr_set'],[])
-        self.assertNotEqual(result['dtree_info']['dtree'],None)
+        self.assertNotEqual(result['dtree'],None)
 
     def test_monitor_identified_uris_monitoring_allowed_some_predefined_supply_monitor_already_existed_as_user_datapoints(self):
         ''' monitor_identified_uris should identify only allowed and pending uris '''
@@ -2129,10 +2120,7 @@ class GestaccountDatapointApiTest(unittest.TestCase):
         self.assertEqual(result['monitored'][1]['aid'], datasource2['aid'])
         self.assertEqual(result['monitored'][1]['uid'], datasource2['uid'])
         self.assertEqual(result['monitored'][1]['previously_existed'], True)
-        self.assertEqual(sorted(result['dtree_info']['classified']),sorted(['datapoint_uri2','datapoint_uri3']))
-        self.assertEqual(result['dtree_info']['conflicts'],[])
-        self.assertEqual(result['dtree_info']['no_positive_tr_set'],[])
-        self.assertNotEqual(result['dtree_info']['dtree'],None)
+        self.assertNotEqual(result['dtree'],None)
 
     def test_monitor_identified_uris_monitoring_allowed_some_predefined_supply_monitor_already_existed_as_user_datapoints_date_null(self):
         ''' monitor_identified_uris should identify only allowed and pending uris '''
@@ -2187,10 +2175,7 @@ class GestaccountDatapointApiTest(unittest.TestCase):
         self.assertEqual(result['monitored'][1]['aid'], datasource2['aid'])
         self.assertEqual(result['monitored'][1]['uid'], datasource2['uid'])
         self.assertEqual(result['monitored'][1]['previously_existed'], True)
-        self.assertEqual(sorted(result['dtree_info']['classified']),sorted(['datapoint_uri2','datapoint_uri3']))
-        self.assertEqual(result['dtree_info']['conflicts'],[])
-        self.assertEqual(result['dtree_info']['no_positive_tr_set'],[])
-        self.assertNotEqual(result['dtree_info']['dtree'],None)
+        self.assertNotEqual(result['dtree'],None)
 
     def test_monitor_identified_uris_monitoring_allowed_limit_executions_based_on_supplies_insert_rate(self):
         ''' monitor_identified_uris should identify pending supplies '''
@@ -2237,10 +2222,7 @@ class GestaccountDatapointApiTest(unittest.TestCase):
         self.assertEqual(result['monitored'][0]['aid'], datasource2['aid'])
         self.assertEqual(result['monitored'][0]['uid'], datasource2['uid'])
         self.assertEqual(result['monitored'][0]['previously_existed'], False)
-        self.assertEqual(sorted(result['dtree_info']['classified']),sorted(['datapoint_uri2']))
-        self.assertEqual(result['dtree_info']['conflicts'],[])
-        self.assertEqual(result['dtree_info']['no_positive_tr_set'],[])
-        self.assertNotEqual(result['dtree_info']['dtree'],None)
+        self.assertNotEqual(result['dtree'],None)
         # now we insert supplies
         self.assertTrue(datasourceapi.update_datasource_supplies(did=did2, supplies=['datapoint_uri2','datapoint_uri3']))
         # execution should be discarded because multiple supplies updates have been done very recently
@@ -2251,7 +2233,7 @@ class GestaccountDatapointApiTest(unittest.TestCase):
         self.assertEqual(result['more_than_once'],[])
         self.assertEqual(len(result['monitored']),0)
         self.assertEqual(result['creation_failed'],[])
-        self.assertEqual(result['dtree_info'],None)
+        self.assertEqual(result['dtree'],None)
 
     def test_select_dtree_for_datasource_failure_invalid_did(self):
         ''' select_dtree_for_datasource should fail if did is invalid '''
