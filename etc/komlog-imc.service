@@ -5,10 +5,8 @@ Wants=redis.service rsyslog.service ntpd.service
 
 [Service]
 Type=idle
-User=komlog
-Group=komlog
-ExecStart=/usr/bin/komlog-imc
-PIDFile=/run/komlog/komlog-imc.pid
+ExecStart=$HOME/.local/bin/komlog-imc
+PrivateTmp=true
 StandardOutput=null
 
 [Install]

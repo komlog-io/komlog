@@ -56,7 +56,7 @@ def get_test_suite():
     return testsuite
 
 setup(name='komlog',
-    version='0.0.1',
+    version='0.0.2',
     description='Komlog',
     author='Komlog Team',
     author_email='hello@komlog.io',
@@ -92,7 +92,7 @@ setup(name='komlog',
     ],
     data_files=[
         ('config',['etc/komlog-imc.cfg','etc/komlog-web.cfg','etc/komlog-websocket.cfg']),
-        ('/usr/lib/systemd/system',['etc/komlog-imc.service','etc/komlog-web.service','etc/komlog-websocket.service'])
+        ('config/systemd',['etc/komlog-imc.service','etc/komlog-web.service','etc/komlog-websocket.service'])
     ]
 )
 
