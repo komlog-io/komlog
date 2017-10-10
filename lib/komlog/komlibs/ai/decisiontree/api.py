@@ -9,9 +9,9 @@ from komlog.komfig import logging
 
 FEAT_WEIGHT = {
     variables.LINE:1,
-    variables.COLUMN:0.75,
-    variables.NUMERIC:0.5,
-    variables.RELATIVE:0.3
+    variables.COLUMN:0.8,
+    variables.RELATIVE:0.3,
+    variables.NUMERIC:0.2
 }
 
 def get_dtree_classifier(data, labels=None, conflicts=None, ignore_features=None):

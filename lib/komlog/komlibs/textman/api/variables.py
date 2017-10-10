@@ -147,7 +147,7 @@ def get_hashed_text(text):
     hashlist['header_lines']=sorted(header_lines)
     return hashlist
 
-def get_variable_atts(text_hash, text_pos, relative_deep=20, same_line_atts=True, up_col_atts=True, down_col_atts=True, numeric_atts=True):
+def get_variable_atts(text_hash, text_pos, relative_deep=20, same_line_atts=True, up_col_atts=True, down_col_atts=True, numeric_atts=False):
     var_atts={}
     var = None
     text_elements=sorted(text_hash['elements'], key=lambda x:x['order'])

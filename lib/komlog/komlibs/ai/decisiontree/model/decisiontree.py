@@ -59,14 +59,17 @@ class DecisionTree:
         def evaluate(children):
             result = None
             for node in children:
-                if node.feature in features and features[node.feature] == node.value:
-                    if node.leaf_node:
-                        result = node.result
-                    else:
-                        result = evaluate(node.children)
-                        if not result:
+                try:
+                    if features[node.feature] == node.value:
+                        if node.leaf_node:
                             result = node.result
-                    break
+                        else:
+                            result = evaluate(node.children)
+                            if result == None:
+                                result = node.result
+                        break
+                except KeyError:
+                    pass
             return result
         return evaluate(self.children)
 
