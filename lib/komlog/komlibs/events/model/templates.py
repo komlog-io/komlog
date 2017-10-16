@@ -15,20 +15,23 @@ HTML_TITLE_TPL_USER_EVENT_NOTIFICATION_NEW_USER=Template(
 
 HTML_BODY_TPL_USER_EVENT_NOTIFICATION_NEW_USER=Template(
     """<div>
-        You can start uploading your time series with <a target="_blank" href="https://github.com/komlog-io/komlogd">komlogd</a>. 
+        <a target="_blank" href="https://github.com/komlog-io/komlogd">
+          <img src="https://raw.githubusercontent.com/komlog-io/komlogd/master/docs/img/home.png" class="img-responsive" alt="Komlog dashboard">
+        </a><p><p>
+        Thank you for joining Komlog. To start uploading your data, please install <strong><a target="_blank" href="https://github.com/komlog-io/komlogd">komlogd</a></strong>, the Komlog agent, on your host.<p>
         Contact us in our <a target="_blank" href="https://gitter.im/komlog_/komlog">Gitter room</a> if you have any 
-        questions or just to hang out.<p /><p />
-        We hope you enjoy using Komlog as much as we do building it!<p/>
+        questions or just to hang out. We are on IRC channel <strong>#Komlog</strong> on Freenode, if you prefer.<p>
+        We hope you enjoy using Komlog as much as we do building it!<p>
         Komlog team.
      </div>"""
 )
 
 HTML_TITLE_TPL_USER_EVENT_NOTIFICATION_NEW_AGENT=Template(
-    "<div>New agent joined</div>"
+    "<div>New Agent</div>"
 )
 
 HTML_BODY_TPL_USER_EVENT_NOTIFICATION_NEW_AGENT=Template(
-    "<div>Agent ${parameters['agentname']} joined the system</div>"
+    "<div>New agent key <strong>${parameters['agentname']}</strong> added to your account.</div>"
 )
 
 HTML_TITLE_TPL_USER_EVENT_NOTIFICATION_NEW_DATASOURCE=Template(
