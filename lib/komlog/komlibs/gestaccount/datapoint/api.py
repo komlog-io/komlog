@@ -741,9 +741,9 @@ def select_dtree_for_datasource(did):
         'updated':False,
         'dtree':None,
     }
-    yesterday = timeuuid.get_unix_timestamp(timeuuid.uuid1()) - 86400
+    interval = timeuuid.get_unix_timestamp(timeuuid.uuid1()) - 7200 # execute once every two hours max
     feats = cassapidatasource.get_datasource_features(did=did)
-    if feats and timeuuid.get_unix_timestamp(feats.date) > yesterday:
+    if feats and timeuuid.get_unix_timestamp(feats.date) > interval:
         result['features'] = feats.features
         return result
     samples = []
