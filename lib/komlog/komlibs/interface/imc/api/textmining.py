@@ -76,7 +76,7 @@ def process_message_FILLDS(message):
             response.add_imc_message(messages.AssociateExistingDTreeMessage(did=message.did))
         elif result['dp_found']:
             if result['non_dp_uris']:
-                response.add_imc_message(messages.MonitorIdentifiedUris(did=message.did, date=message.date))
+                response.add_imc_message(messages.MonitorIdentifiedUrisMessage(did=message.did, date=message.date))
             # dtree has identified some dps in this sample
             uris=[]
             for dp in result['dp_found']:
@@ -84,7 +84,7 @@ def process_message_FILLDS(message):
             response.add_imc_message(messages.UrisUpdatedMessage(uris=uris,date=date))
         elif result['non_dp_uris']:
             # dtree has not identified any dp, but has identified uris not monitored yet.
-            response.add_imc_message(messages.MonitorIdentifiedUris(did=message.did, date=message.date))
+            response.add_imc_message(messages.MonitorIdentifiedUrisMessage(did=message.did, date=message.date))
         elif not result['dp_missing']:
             # dtree has not identified any dp, any uri missing, and any dp is pending for identification.
             # we try to select another dtree for this ds (This operations has a max frec configured internally)
