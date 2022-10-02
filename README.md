@@ -1,5 +1,5 @@
 # komlog
-Komlog is a monitoring system with that tries to understand plain scripts/commands outputs and parse metrics from them
+Komlog is a monitoring system with that tries to identify metrics from plain scripts/commands outputs.
 
 ![Captura de pantalla de 2016-10-21 16-46-21](https://user-images.githubusercontent.com/2930882/193475459-8a992ee2-f15d-4cda-9f0a-b5232fc98355.png)
 
