@@ -1,6 +1,13 @@
 # komlog
-Komlog is a monitoring system with that tries to identify metrics from plain scripts/commands outputs.
 
-![Captura de pantalla de 2016-10-21 16-46-21](https://user-images.githubusercontent.com/2930882/193475459-8a992ee2-f15d-4cda-9f0a-b5232fc98355.png)
+This project is not actively developed.
 
-[Captura del escritorio de 26-02-16 17%3a15%3a29.webm](https://user-images.githubusercontent.com/2930882/193475543-706afba8-aa5e-4d64-b2b1-692df3d833f1.webm)
+Komlog was an attempt to create an intelligent monitoring system, capable of identifying metrics from unformatted text. 
+
+It used some ML algorithms to identify metrics. These algorithms were automatically trained from user feedback.
+
+Eventually, I had to abandon the project due to lack of time, however, although there was still a lot to do, I am very proud of what I managed to do.
+
+
+https://github.com/komlog-io/komlog/assets/2930882/c920a121-c58c-409f-ab00-a69a1c3d36d5
+
